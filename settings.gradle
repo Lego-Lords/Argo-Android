@@ -1,0 +1,1 @@
+include ':ArJpctBaseLib', ':Argo', ':junit-4.12'
