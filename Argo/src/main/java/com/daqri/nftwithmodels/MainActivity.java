@@ -7,18 +7,21 @@ import android.widget.FrameLayout;
 
 import com.threed.jpct.Config;
 import com.threed.jpct.Loader;
+import com.threed.jpct.Matrix;
 import com.threed.jpct.Object3D;
 import com.threed.jpct.Primitives;
 import com.threed.jpct.SimpleVector;
 import com.threed.jpct.Texture;
 import com.threed.jpct.TextureManager;
 import com.threed.jpct.World;
+import com.threed.jpct.util.BitmapHelper;
 
 import org.artoolkit.ar.jpct.ArJpctActivity;
 import org.artoolkit.ar.jpct.TrackableLight;
 import org.artoolkit.ar.jpct.TrackableObject3d;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +30,8 @@ public class MainActivity extends ArJpctActivity {
 
     private List<TrackableObject3d> list;
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
-    private Object3D[] legoModel1;
-    private Object3D[] legoModel2;
+    private Object3D legoModel1;
+    private Object3D legoModel2;
     private ArrayList<Object3D> modelList = new ArrayList<>();
     private boolean firstTap = true;
     private int currentModel = 0;
@@ -84,7 +87,7 @@ public class MainActivity extends ArJpctActivity {
 
     public void configureWorld(World world) {
         Config.farPlane = 2000;
-        world.setAmbientLight(90, 90, 90); //255 all original
+        world.setAmbientLight(200, 200, 200); //255 all original
     }
 
     protected void populateTrackableObjects(List<TrackableObject3d> list) {
@@ -97,22 +100,32 @@ public class MainActivity extends ArJpctActivity {
         texture = new Texture(getResources().getDrawable(R.drawable.moon_ground));
         TextureManager.getInstance().addTexture("moon_ground", texture);*/
 
-        //TextureManager.getInstance().addTexture("duplo4baked", new Texture(getResources().getDrawable(R.drawable.duplo4baked)));
-
+        //TextureManager.getInstance().addTexture("wolf", new Texture(getResources().getDrawable(R.drawable.wolf)));
+        Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.one_two_blue)), 64, 64));
+        TextureManager.getInstance().addTexture("one_two_blue", texture);
         try {
-            legoModel1 = Loader.load3DS(getAssets().open("legoBrick.3ds"), 30);
-            //Object3D [] astronaut = Loader.loadOBJ(getAssets().open("legoBrick.obj"), getAssets().open("legoBrick.mtl"), 50);
-            legoModel1[0].setOrigin(new SimpleVector(200, -100, 0));
-            //astronaut[0].setTexture("duplo4baked");
-            tckobj.addChild(legoModel1[0]);
-            modelList.add(legoModel1[0]);
+            //legoModel1 = Loader.load3DS(getAssets().open("thisisit.3ds"), 30);
+//            legoModel1 = Loader.loadOBJ(getAssets().open("legotestfromblender.obj"), getAssets().open("legotestfromblender.mtl"), 10);
+            legoModel1 = loadModel("one_two.3ds", 20);
 
-            legoModel2 = Loader.load3DS(getAssets().open("duplo4.3ds"), 30);
+            legoModel1.setTexture("one_two_blue");
+            legoModel1.strip();
+            legoModel1.build();
+            //legoModel1.setTransparency(-1);
             //Object3D [] astronaut = Loader.loadOBJ(getAssets().open("legoBrick.obj"), getAssets().open("legoBrick.mtl"), 50);
-            legoModel2[0].setOrigin(new SimpleVector(150, -150, 30));
+            // legoModel1[0].setOrigin(new SimpleVector(0, 0, 0));
             //astronaut[0].setTexture("duplo4baked");
-            tckobj.addChild(legoModel2[0]);
-            modelList.add(legoModel2[0]);
+            //legoModel1[0].setTexture("legotext");
+            tckobj.addChild(legoModel1);
+            modelList.add(legoModel1);
+
+            legoModel2 = loadModel("duplo4.3ds", 30);
+            //legoModel2 = Loader.load3DS(getAssets().open("duplo4.3ds"), 30);
+            //Object3D [] astronaut = Loader.loadOBJ(getAssets().open("legoBrick.obj"), getAssets().open("legoBrick.mtl"), 50);
+            legoModel2.setOrigin(new SimpleVector(150, -150, 30));
+            //astronaut[0].setTexture("duplo4baked");
+            tckobj.addChild(legoModel2);
+            modelList.add(legoModel2);
 
 
           /*  // Put a plane to see where it cuts
@@ -128,5 +141,21 @@ public class MainActivity extends ArJpctActivity {
         }
 
         this.list.add(tckobj);
+    }
+
+    private Object3D loadModel(String filename, float scale) throws IOException {
+        Object3D[] model = Loader.load3DS(getAssets().open(filename), scale);
+        Object3D o3d = new Object3D(0);
+        Object3D temp = null;
+        for (int i = 0; i < model.length; i++) {
+            temp = model[i];
+            temp.setCenter(SimpleVector.ORIGIN);
+            temp.rotateX((float)( -.5*Math.PI));
+            //temp.rotateMesh();
+            temp.setRotationMatrix(new Matrix());
+            o3d = Object3D.mergeObjects(o3d, temp);
+            o3d.build();
+        }
+        return o3d;
     }
 }
