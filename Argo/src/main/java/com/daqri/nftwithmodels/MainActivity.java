@@ -101,16 +101,16 @@ public class MainActivity extends ArJpctActivity {
         TextureManager.getInstance().addTexture("moon_ground", texture);*/
 
         //TextureManager.getInstance().addTexture("wolf", new Texture(getResources().getDrawable(R.drawable.wolf)));
-        Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.one_two_blue)), 64, 64));
-        TextureManager.getInstance().addTexture("one_two_blue", texture);
+        Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.one_three_green)), 64, 64));
+        TextureManager.getInstance().addTexture("one_three_green", texture);
         try {
             //legoModel1 = Loader.load3DS(getAssets().open("thisisit.3ds"), 30);
 //            legoModel1 = Loader.loadOBJ(getAssets().open("legotestfromblender.obj"), getAssets().open("legotestfromblender.mtl"), 10);
-            legoModel1 = loadModel("one_two.3ds", 20);
+            legoModel1 = loadModel("one_three.3ds", 15);
 
-            legoModel1.setTexture("one_two_blue");
-            legoModel1.strip();
-            legoModel1.build();
+            legoModel1.setTexture("one_three_green");
+   /*         legoModel1.strip();
+            legoModel1.build();*/
             //legoModel1.setTransparency(-1);
             //Object3D [] astronaut = Loader.loadOBJ(getAssets().open("legoBrick.obj"), getAssets().open("legoBrick.mtl"), 50);
             // legoModel1[0].setOrigin(new SimpleVector(0, 0, 0));
