@@ -1,9 +1,4 @@
-0 Pyramid
-0 Name: Pyramid.dat
-0 Author: James Jessiman
-0 Original LDraw Model - LDraw beta 0.27 Archive
-
-0 Pyramid
+0 !LEOCAD MODEL CURRENT_STEP5
 1 1 -40 -24 60 1 0 0 0 1 0 0 0 1 3001.DAT
 1 1 40 -24 60 1 0 0 0 1 0 0 0 1 3001.DAT
 1 1 60 -24 0 0 0 1 0 1 0 -1 0 0 3001.DAT

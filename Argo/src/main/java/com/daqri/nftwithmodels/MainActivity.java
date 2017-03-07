@@ -42,8 +42,6 @@ public class MainActivity extends ArJpctActivity {
 
     private List<TrackableObject3d> list;
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
-    private Object3D legoModel1;
-    private Object3D legoModel2;
     private ArrayList<Object3D> modelList = new ArrayList<>();
     private boolean firstTap = true;
     private int currentModel = 0;
@@ -138,7 +136,6 @@ public class MainActivity extends ArJpctActivity {
         this.list = list;
         //Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.one_three_green)), 64, 64));
         //TextureManager.getInstance().addTexture("one_three_green", texture);
-
         Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_white)), 64, 64));
         TextureManager.getInstance().addTexture("3001_15", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_white)), 64, 64));
@@ -176,9 +173,6 @@ public class MainActivity extends ArJpctActivity {
            e.printStackTrace();
         }*/
 
-
-
-
         AssetManager assetManager = getResources().getAssets();
         // To load text file
         InputStream input;
@@ -209,8 +203,9 @@ public class MainActivity extends ArJpctActivity {
                     float yPos=0;
                     float zPos=0;
                     int color = -1;
-                    //data for rotation NEXT TIME
-                    float[][] rotMatri = new float[3][3];
+                    //data for rotation
+                    Matrix rotMatrix = new Matrix();
+                    Matrix initMatrix = new Matrix();
 
                     while (m.find()) {
                         counter++;
@@ -219,28 +214,41 @@ public class MainActivity extends ArJpctActivity {
                             case 3: xPos = Float.valueOf(m.group(1));break;
                             case 4: zPos = Float.valueOf(m.group(1))*-1;break; // times -1 kasi opposite yung pag show sa phone
                             case 5: yPos = Float.valueOf(m.group(1));break;
-                            case 6: rotMatri[0][0] = Float.valueOf(m.group(1));break;
-                            case 7: rotMatri[0][1] = Float.valueOf(m.group(1));break;
-                            case 8: rotMatri[0][2] = Float.valueOf(m.group(1));break;
-                            case 9: rotMatri[1][0] = Float.valueOf(m.group(1));break;
-                            case 10: rotMatri[1][1] = Float.valueOf(m.group(1));break;
-                            case 11: rotMatri[1][2] = Float.valueOf(m.group(1));break;
-                            case 12: rotMatri[2][0] = Float.valueOf(m.group(1));break;
-                            case 13: rotMatri[2][1] = Float.valueOf(m.group(1));break;
-                            case 14: rotMatri[2][2] = Float.valueOf(m.group(1));break;
+                            case 6: initMatrix.set(0,0, Float.valueOf(m.group(1)));break;
+                            case 7: initMatrix.set(0,1, Float.valueOf(m.group(1)));break;
+                            case 8: initMatrix.set(0,2, Float.valueOf(m.group(1)));break;
+                            case 9: initMatrix.set(1,0, Float.valueOf(m.group(1)));break;
+                            case 10:initMatrix.set(1,1, Float.valueOf(m.group(1)));break;
+                            case 11:initMatrix.set(1,2, Float.valueOf(m.group(1)));break;
+                            case 12:initMatrix.set(2,0, Float.valueOf(m.group(1)));break;
+                            case 13:initMatrix.set(2,1, Float.valueOf(m.group(1)));break;
+                            case 14:initMatrix.set(2,2, Float.valueOf(m.group(1)));break;
                             case 15: modelID = m.group(1);modelID=modelID.replace(".","");break; // replace "." kasi may bug regex haha
                         }
+                    }
+                    // CHECK IF IDENTITY MATRIX
+                    if(!initMatrix.isIdentity()){
+                        //override kasi weirdo ang mundo
+                        rotMatrix.set(0,0, initMatrix.get(1,0));
+                        rotMatrix.set(0,1, initMatrix.get(1,1));
+                        rotMatrix.set(0,2, initMatrix.get(1,2));
+                        rotMatrix.set(1,0, initMatrix.get(2,0));
+                        rotMatrix.set(1,1, initMatrix.get(2,1));
+                        rotMatrix.set(1,2, initMatrix.get(2,2));
+                        rotMatrix.set(2,0, initMatrix.get(0,0));
+                        rotMatrix.set(2,1, initMatrix.get(0,1));
+                        rotMatrix.set(2,2, initMatrix.get(0,2));
+                    }
+                    else {
+                        rotMatrix = initMatrix;
                     }
                     // build brick model
                     Object3D brickModel = loadModel(modelID + ".3ds", 10);
                     brickModel.setTexture(modelID + "_" + color);
                     brickModel.setName(modelID + "_" + color);
-/*                    // set rotation
-                    xPos = xPos*rotMatri[0][0] + yPos*rotMatri[0][1] + zPos*rotMatri[0][2];
-                    yPos = xPos*rotMatri[1][0] + yPos*rotMatri[1][1] + zPos*rotMatri[1][2];
-                    zPos = xPos*rotMatri[2][0] + yPos*rotMatri[2][1] + zPos*rotMatri[2][2];*/
-                    brickModel.setOrigin(new SimpleVector(yPos + 200, xPos - 200, zPos));
-                    //brickModel.rotateZ((float) Math.toRadians(90));
+                    brickModel.setRotationMatrix(rotMatrix);
+                    brickModel.setOrigin(new SimpleVector(yPos+200, xPos-200, zPos));
+
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
                 }
