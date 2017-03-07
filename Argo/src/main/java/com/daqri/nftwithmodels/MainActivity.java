@@ -10,6 +10,8 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.threed.jpct.Config;
 import com.threed.jpct.Loader;
@@ -26,6 +28,7 @@ import com.threed.jpct.util.BitmapHelper;
 import org.artoolkit.ar.jpct.ArJpctActivity;
 import org.artoolkit.ar.jpct.TrackableLight;
 import org.artoolkit.ar.jpct.TrackableObject3d;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,6 +51,8 @@ public class MainActivity extends ArJpctActivity {
     private Context mContext;
     private int legoModelStructureID;
     private LegoModel lm;
+    private TextView brickTypeTextView;
+    private ImageView brickTypeImageView;
 
 
 
@@ -57,6 +62,10 @@ public class MainActivity extends ArJpctActivity {
         getIntent().setAction("Already created");
         setContentView(R.layout.activity_main);
 
+        brickTypeTextView = (TextView) findViewById(R.id.brick_type);
+        brickTypeImageView = (ImageView) findViewById(R.id.brick_pic);
+
+        brickTypeTextView.setText("");
         lm = new LegoModel();
         mContext = this.getApplicationContext();
         this.legoModelStructureID = Integer.parseInt(getIntent().getStringExtra("LEGO_MODEL_ID"));
@@ -72,6 +81,7 @@ public class MainActivity extends ArJpctActivity {
                     firstTap = !firstTap;
                 } else if (currentModel < modelList.size()) {
                     tckobj.addChild(modelList.get(currentModel));
+                    updateBrickTypeTV(modelList.get(currentModel).getName(), currentModel);
                     currentModel += 1;
                 } else {
                     currentModel = 0;
@@ -85,6 +95,23 @@ public class MainActivity extends ArJpctActivity {
             }
 
         });
+    }
+
+    private void updateBrickTypeTV(String name, int step) {
+        String[] result = name.split("_");
+        String brick = null;
+        //add color
+        step+=1;
+
+
+        switch(result[0])
+        {
+            case "3001": brick = "2x4"; break;
+            case "3003": brick = "2x2"; break;
+            case "3005": brick = "1x1"; break;
+        }
+
+        brickTypeTextView.setText("NEXT STEP #: " + step + "/" + modelList.size() + "\n" + brick);
     }
 
     @Override
@@ -207,12 +234,13 @@ public class MainActivity extends ArJpctActivity {
                     // build brick model
                     Object3D brickModel = loadModel(modelID + ".3ds", 10);
                     brickModel.setTexture(modelID + "_" + color);
-                    // set rotation
+                    brickModel.setName(modelID + "_" + color);
+/*                    // set rotation
                     xPos = xPos*rotMatri[0][0] + yPos*rotMatri[0][1] + zPos*rotMatri[0][2];
                     yPos = xPos*rotMatri[1][0] + yPos*rotMatri[1][1] + zPos*rotMatri[1][2];
-                    zPos = xPos*rotMatri[2][0] + yPos*rotMatri[2][1] + zPos*rotMatri[2][2];
-                    brickModel.setOrigin(new SimpleVector(yPos+200, xPos-200, zPos));
-
+                    zPos = xPos*rotMatri[2][0] + yPos*rotMatri[2][1] + zPos*rotMatri[2][2];*/
+                    brickModel.setOrigin(new SimpleVector(yPos + 200, xPos - 200, zPos));
+                    //brickModel.rotateZ((float) Math.toRadians(90));
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
                 }
