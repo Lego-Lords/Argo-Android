@@ -182,19 +182,36 @@ public class MainActivity extends ArJpctActivity {
                     float yPos=0;
                     float zPos=0;
                     //data for rotation NEXT TIME
+                    float[][] rotMatri = new float[3][3];
+
                     while (m.find()) {
                         counter++;
                         switch(counter){
+                            case 2: //color
                             case 3: xPos = Float.valueOf(m.group(1));break;
                             case 4: zPos = Float.valueOf(m.group(1))*-1;break; // times -1 kasi opposite yung pag show sa phone
                             case 5: yPos = Float.valueOf(m.group(1));break;
+                            case 6: rotMatri[0][0] = Float.valueOf(m.group(1));break;
+                            case 7: rotMatri[0][1] = Float.valueOf(m.group(1));break;
+                            case 8: rotMatri[0][2] = Float.valueOf(m.group(1));break;
+                            case 9: rotMatri[1][0] = Float.valueOf(m.group(1));break;
+                            case 10: rotMatri[1][1] = Float.valueOf(m.group(1));break;
+                            case 11: rotMatri[1][2] = Float.valueOf(m.group(1));break;
+                            case 12: rotMatri[2][0] = Float.valueOf(m.group(1));break;
+                            case 13: rotMatri[2][1] = Float.valueOf(m.group(1));break;
+                            case 14: rotMatri[2][2] = Float.valueOf(m.group(1));break;
                             case 15: modelID = m.group(1);modelID=modelID.replace(".","");break; // replace "." kasi may bug regex haha
                         }
                     }
                     // build brick model
                     Object3D brickModel = loadModel(modelID + ".3ds", 10);
                     brickModel.setTexture(modelID);
+                    // set rotation
+                    xPos = xPos*rotMatri[0][0] + yPos*rotMatri[0][1] + zPos*rotMatri[0][2];
+                    yPos = xPos*rotMatri[1][0] + yPos*rotMatri[1][1] + zPos*rotMatri[1][2];
+                    zPos = xPos*rotMatri[2][0] + yPos*rotMatri[2][1] + zPos*rotMatri[2][2];
                     brickModel.setOrigin(new SimpleVector(yPos, xPos, zPos));
+
 /*                    brickModel.strip();
                     brickModel.build();*/
                     tckobj.addChild(brickModel);
