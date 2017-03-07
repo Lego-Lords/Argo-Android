@@ -24,6 +24,7 @@ public class SelectionScreenActivity extends AppCompatActivity {
 
         build_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                //SEND MODEL ID TO SERVER HERE
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 intent.putExtra("LEGO_MODEL_ID", String.valueOf(viewPager.getCurrentItem()));
                 startActivity(intent);

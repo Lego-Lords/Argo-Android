@@ -65,26 +65,18 @@ public class MainActivity extends ArJpctActivity {
         mainLayout.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                if(firstTap)
-                {
-                    for(int i = 0; i < modelList.size(); i++)
-                    {
+                if (firstTap) {
+                    for (int i = 0; i < modelList.size(); i++) {
                         tckobj.removeChild(modelList.get(i));
                     }
                     firstTap = !firstTap;
-                }
-                else if(currentModel < modelList.size())
-                {
+                } else if (currentModel < modelList.size()) {
                     tckobj.addChild(modelList.get(currentModel));
                     currentModel += 1;
-                }
-                else
-                {
+                } else {
                     currentModel = 0;
                     firstTap = !firstTap;
                 }
-
-
 
 
                 Vibrator vib = (Vibrator) getSystemService(VIBRATOR_SERVICE);
@@ -94,7 +86,7 @@ public class MainActivity extends ArJpctActivity {
 
         });
     }
-    
+
     @Override
     public void onStop() {
         super.onStop();
@@ -120,10 +112,18 @@ public class MainActivity extends ArJpctActivity {
         //Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.one_three_green)), 64, 64));
         //TextureManager.getInstance().addTexture("one_three_green", texture);
 
-        Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001)), 64, 64));
-        TextureManager.getInstance().addTexture("3001", texture);
-        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003)), 64, 64));
-        TextureManager.getInstance().addTexture("3003", texture);
+        Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_white)), 64, 64));
+        TextureManager.getInstance().addTexture("3001_15", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_white)), 64, 64));
+        TextureManager.getInstance().addTexture("3003_15", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_blue)), 64, 64));
+        TextureManager.getInstance().addTexture("3001_1", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_red)), 64, 64));
+        TextureManager.getInstance().addTexture("3001_4", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_yellow)), 64, 64));
+        TextureManager.getInstance().addTexture("3001_14", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_black)), 64, 64));
+        TextureManager.getInstance().addTexture("3003_0", texture);
 /*        try {
             legoModel1 = loadModel("one_three.3ds", 15);
             legoModel1.setTexture("one_three_green");
@@ -181,10 +181,12 @@ public class MainActivity extends ArJpctActivity {
                     float xPos=0;
                     float yPos=0;
                     float zPos=0;
+                    int color = -1;
                     //data for rotation NEXT TIME
                     while (m.find()) {
                         counter++;
                         switch(counter){
+                            case 2: color = Integer.valueOf(m.group(1));break;
                             case 3: xPos = Float.valueOf(m.group(1));break;
                             case 4: zPos = Float.valueOf(m.group(1))*-1;break; // times -1 kasi opposite yung pag show sa phone
                             case 5: yPos = Float.valueOf(m.group(1));break;
@@ -193,8 +195,8 @@ public class MainActivity extends ArJpctActivity {
                     }
                     // build brick model
                     Object3D brickModel = loadModel(modelID + ".3ds", 10);
-                    brickModel.setTexture(modelID);
-                    brickModel.setOrigin(new SimpleVector(yPos, xPos, zPos));
+                    brickModel.setTexture(modelID + "_" + color);
+                    brickModel.setOrigin(new SimpleVector(yPos+200, xPos-200, zPos));
 /*                    brickModel.strip();
                     brickModel.build();*/
                     tckobj.addChild(brickModel);
