@@ -46,14 +46,20 @@ public class MainActivity extends ArJpctActivity {
     private int currentModel = 0;
     private World world;
     private Context mContext;
+    private int legoModelStructureID;
+    private LegoModel lm;
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getIntent().setAction("Already created");
         setContentView(R.layout.activity_main);
-        mContext = this.getApplicationContext();
 
+        lm = new LegoModel();
+        mContext = this.getApplicationContext();
+        this.legoModelStructureID = Integer.parseInt(getIntent().getStringExtra("LEGO_MODEL_ID"));
         mainLayout = supplyFrameLayout();
         // When the screen is tapped, inform the renderer and vibrate the phone
         mainLayout.setOnClickListener(new View.OnClickListener() {
@@ -88,24 +94,11 @@ public class MainActivity extends ArJpctActivity {
 
         });
     }
-/*Restart application onResume para di mag crash*/
+    
     @Override
-    public void onResume() {
-        Log.v("Example", "onResume");
-
-        String action = getIntent().getAction();
-        // Prevent endless loop by adding a unique action, don't restart if action is present
-        if(action == null || !action.equals("Already created")) {
-            Log.v("Example", "Force restart");
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-            finish();
-        }
-        // Remove the unique action so the next time onResume is called it will restart
-        else
-            getIntent().setAction(null);
-
-        super.onResume();
+    public void onStop() {
+        super.onStop();
+        finish();
     }
 
     /**
@@ -162,7 +155,7 @@ public class MainActivity extends ArJpctActivity {
         AssetManager assetManager = getResources().getAssets();
         // To load text file
         InputStream input;
-        String filename = "snowcat";
+        String filename = lm.getModelFileName(legoModelStructureID);
         try {
             input = assetManager.open(filename+".ldr");
 
@@ -200,7 +193,6 @@ public class MainActivity extends ArJpctActivity {
                     }
                     // build brick model
                     Object3D brickModel = loadModel(modelID + ".3ds", 10);
-                    brickModel.rotateZ((float)( -.5*Math.PI));
                     brickModel.setTexture(modelID);
                     brickModel.setOrigin(new SimpleVector(yPos, xPos, zPos));
 /*                    brickModel.strip();
@@ -227,7 +219,7 @@ public class MainActivity extends ArJpctActivity {
         for (int i = 0; i < model.length; i++) {
             temp = model[i];
             temp.setCenter(SimpleVector.ORIGIN);
-            temp.rotateX((float) (-.5 * Math.PI));
+            //temp.rotateX((float) (-.5 * Math.PI));
             //temp.rotateMesh();
             temp.setRotationMatrix(new Matrix());
             o3d = Object3D.mergeObjects(o3d, temp);
