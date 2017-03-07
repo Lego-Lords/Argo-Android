@@ -39,8 +39,6 @@ public class MainActivity extends ArJpctActivity {
 
     private List<TrackableObject3d> list;
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
-    private Object3D legoModel1;
-    private Object3D legoModel2;
     private ArrayList<Object3D> modelList = new ArrayList<>();
     private boolean firstTap = true;
     private int currentModel = 0;
@@ -124,30 +122,6 @@ public class MainActivity extends ArJpctActivity {
         TextureManager.getInstance().addTexture("3001", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003)), 64, 64));
         TextureManager.getInstance().addTexture("3003", texture);
-/*        try {
-            legoModel1 = loadModel("one_three.3ds", 15);
-            legoModel1.setTexture("one_three_green");
-   *//*         legoModel1.strip();
-            legoModel1.build();*//*
-            tckobj.addChild(legoModel1);
-            modelList.add(legoModel1);
-
-            legoModel2 = loadModel("duplo4.3ds", 30);
-            legoModel2.setOrigin(new SimpleVector(150, -150, 30));
-            tckobj.addChild(legoModel2);
-            modelList.add(legoModel2);
-
-
-          *//*  // Put a plane to see where it cuts
-            Object3D object3D = Primitives.getPlane(2, 200);
-            // Planes are rotated 180 degrees, so we need to flip them
-            object3D.rotateX((float) Math.PI);
-            object3D.setOrigin(new SimpleVector(125, 125, 0));
-            //object3D.setTexture("moon_ground");
-            tckobj.addChild(object3D);*//*
-        } catch (IOException e) {
-           e.printStackTrace();
-        }*/
 
 
 
