@@ -1,6 +1,7 @@
 package com.daqri.nftwithmodels;
 
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -39,7 +41,7 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends ArJpctActivity {
 
-
+    final Context context = this;
     private List<TrackableObject3d> list;
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
     private ArrayList<Object3D> modelList = new ArrayList<>();
@@ -51,6 +53,7 @@ public class MainActivity extends ArJpctActivity {
     private LegoModel lm;
     private TextView brickTypeTextView;
     private ImageView brickTypeImageView;
+    private TextView brickStepTextView;
 
 
 
@@ -62,6 +65,7 @@ public class MainActivity extends ArJpctActivity {
 
         brickTypeTextView = (TextView) findViewById(R.id.brick_type);
         brickTypeImageView = (ImageView) findViewById(R.id.brick_pic);
+        brickStepTextView = (TextView) findViewById(R.id.step_tv);
 
         brickTypeTextView.setText("");
         lm = new LegoModel();
@@ -84,6 +88,31 @@ public class MainActivity extends ArJpctActivity {
                 } else {
                     currentModel = 0;
                     firstTap = !firstTap;
+                    brickTypeImageView.setImageResource(0);
+                    brickStepTextView.setText("");
+                    brickTypeTextView.setText("");
+                    // custom dialog
+                    final Dialog dialog = new Dialog(context);
+                    dialog.setContentView(R.layout.custom_dialog);
+                    dialog.setTitle("Title...");
+
+                    // set the custom dialog components - text, image and button
+                    TextView text = (TextView) dialog.findViewById(R.id.text);
+                    text.setText("Congratulations! you have successfully build " + lm.getModelName(legoModelStructureID));
+                    ImageView image = (ImageView) dialog.findViewById(R.id.image);
+                    image.setImageResource(lm.getImageResource(legoModelStructureID));
+
+                    Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+                    // if button is clicked, close the custom dialog
+                    dialogButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            dialog.dismiss();
+                            finish();
+                        }
+                    });
+
+                    dialog.show();
                 }
 
 
@@ -104,12 +133,28 @@ public class MainActivity extends ArJpctActivity {
 
         switch(result[0])
         {
-            case "3001": brick = "2x4"; break;
-            case "3003": brick = "2x2"; break;
+            case "3001": brick = "2x4";
+                switch (result[1])
+                {
+                    case "1": brickTypeImageView.setImageResource(R.drawable.step_3001_1); break;
+                    case "4": brickTypeImageView.setImageResource(R.drawable.step_3001_4); break;
+                    case "14": brickTypeImageView.setImageResource(R.drawable.step_3001_14); break;
+                    case "15": brickTypeImageView.setImageResource(R.drawable.step_3001_15); break;
+                }
+                break;
+            case "3003": brick = "2x2";
+                switch (result[1])
+                {
+                    case "0": brickTypeImageView.setImageResource(R.drawable.step_3003_0); break;
+                    case "15": brickTypeImageView.setImageResource(R.drawable.step_3003_15); break;
+                }
+                break;
             case "3005": brick = "1x1"; break;
         }
 
-        brickTypeTextView.setText("NEXT STEP #: " + step + "/" + modelList.size() + "\n" + brick);
+        brickStepTextView.setText("STEP:"+ step + "/" + modelList.size());
+        brickTypeTextView.setText(brick);
+
     }
 
     @Override
