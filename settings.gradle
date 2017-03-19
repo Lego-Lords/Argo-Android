@@ -1,1 +1,1 @@
-include ':ArJpctBaseLib', ':Argo', ':junit-4.12'
+include ':ArJpctBaseLib', ':Argo', ':junit-4.12', ':okhttp-3.4.1', ':httpclient-4.2.1'

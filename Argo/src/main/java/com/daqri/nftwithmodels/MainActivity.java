@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.threed.jpct.Config;
 import com.threed.jpct.Loader;
@@ -30,17 +32,29 @@ import com.threed.jpct.util.BitmapHelper;
 import org.artoolkit.ar.jpct.ArJpctActivity;
 import org.artoolkit.ar.jpct.TrackableLight;
 import org.artoolkit.ar.jpct.TrackableObject3d;
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends ArJpctActivity {
-
+    private static String url= "http://api.androidhive.info/contacts/"; // SERVER FETCH URL
+    ArrayList<HashMap<String, String>> contactList = new ArrayList<>();
     final Context context = this;
     private List<TrackableObject3d> list;
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
@@ -54,8 +68,6 @@ public class MainActivity extends ArJpctActivity {
     private TextView brickTypeTextView;
     private ImageView brickTypeImageView;
     private TextView brickStepTextView;
-
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -115,7 +127,8 @@ public class MainActivity extends ArJpctActivity {
                     dialog.show();
                 }
 
-
+                //call server to get data on tap
+                new GetContacts().execute();
                 Vibrator vib = (Vibrator) getSystemService(VIBRATOR_SERVICE);
                 vib.vibrate(100);
 
@@ -323,5 +336,117 @@ public class MainActivity extends ArJpctActivity {
             o3d.build();
         }
         return o3d;
+    }
+
+    /**
+     * Async task class to get json by making HTTP call
+     */
+    private class GetContacts extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+/*            pDialog = new ProgressDialog(MainActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();*/
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+            HttpHandler sh = new HttpHandler();
+
+            // Making a request to url and getting response
+            String jsonStr = sh.makeServiceCall(url);
+
+            Log.e(TAG, "Response from url: " + jsonStr);
+
+            if (jsonStr != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(jsonStr);
+
+                    // Getting JSON Array node
+                    JSONArray contacts = jsonObj.getJSONArray("contacts");
+
+                    // looping through All Contacts
+                    for (int i = 0; i < contacts.length(); i++) {
+                        JSONObject c = contacts.getJSONObject(i);
+
+                        String id = c.getString("id");
+                        String name = c.getString("name");
+                        String email = c.getString("email");
+                        String address = c.getString("address");
+                        String gender = c.getString("gender");
+
+                        // Phone node is JSON Object
+                        JSONObject phone = c.getJSONObject("phone");
+                        String mobile = phone.getString("mobile");
+                        String home = phone.getString("home");
+                        String office = phone.getString("office");
+
+                        // tmp hash map for single contact
+                        HashMap<String, String> contact = new HashMap<>();
+
+                        // adding each child node to HashMap key => value
+                        contact.put("id", id);
+                        contact.put("name", name);
+                        contact.put("email", email);
+                        contact.put("mobile", mobile);
+
+                        // adding contact to contact list
+                        contactList.add(contact);
+                    }
+                } catch (final JSONException e) {
+                    Log.e(TAG, "Json parsing error: " + e.getMessage());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(),
+                                    "Json parsing error: " + e.getMessage(),
+                                    Toast.LENGTH_LONG)
+                                    .show();
+                        }
+                    });
+
+                }
+            } else {
+                Log.e(TAG, "Couldn't get json from server.");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),
+                                "Couldn't get json from server. Check LogCat for possible errors!",
+                                Toast.LENGTH_LONG)
+                                .show();
+                    }
+                });
+
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+/*            // Dismiss the progress dialog
+*//*            if (pDialog.isShowing())
+                pDialog.dismiss();*//*
+            *//**
+             * Updating parsed JSON data into ListView
+             * *//*
+            ListAdapter adapter = new SimpleAdapter(
+                    MainActivity.this, contactList,
+                    R.layout.list_item, new String[]{"name", "email",
+                    "mobile"}, new int[]{R.id.name,
+                    R.id.email, R.id.mobile});
+
+            lv.setAdapter(adapter);*/
+
+            Log.d(TAG, "eto" + contactList.get(0).get("name"));
+        }
+
     }
 }
