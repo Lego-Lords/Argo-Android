@@ -21,6 +21,9 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class SelectionScreenActivity extends AppCompatActivity {
+
+    String your_IP_address = "192.168.0.103:8000";  //Enter your IP address : port
+
     ViewPager viewPager;
     CustomSwipeAdapter adapter;
     Button build_button;
@@ -69,7 +72,7 @@ public class SelectionScreenActivity extends AppCompatActivity {
 
         protected String doInBackground(String... urls) {
             try {
-                String getResponse = post("http://httpbin.org/post", buildJSON(currentModelSelectedID));
+                String getResponse = post(lm.getModelName(currentModelSelectedID)); //"http://httpbin.org/post"
                 return getResponse;
             } catch (Exception e) {
                 this.exception = e;
@@ -81,11 +84,12 @@ public class SelectionScreenActivity extends AppCompatActivity {
             System.out.println(getResponse);
         }
 
-        private String post(String url, String json) throws IOException {
-            RequestBody body = RequestBody.create(JSON, json);
+        private String post(String modelName) throws IOException {
+            String your_web_app = "model-id?id="+modelName+"";  //Replace this with your own web app name
+            String baseUrl = "http://" + your_IP_address + "/" + your_web_app + "/";
+
             Request request = new Request.Builder()
-                    .url(url)
-                    .post(body)
+                    .url(baseUrl)
                     .build();
             Response response = client.newCall(request).execute();
             return response.body().string();

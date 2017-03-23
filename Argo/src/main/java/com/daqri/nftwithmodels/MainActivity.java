@@ -1,14 +1,11 @@
 package com.daqri.nftwithmodels;
 
-import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Vibrator;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,7 +19,6 @@ import com.threed.jpct.Loader;
 import com.threed.jpct.Logger;
 import com.threed.jpct.Matrix;
 import com.threed.jpct.Object3D;
-import com.threed.jpct.Primitives;
 import com.threed.jpct.SimpleVector;
 import com.threed.jpct.Texture;
 import com.threed.jpct.TextureManager;
@@ -30,19 +26,11 @@ import com.threed.jpct.World;
 import com.threed.jpct.util.BitmapHelper;
 
 import org.artoolkit.ar.jpct.ArJpctActivity;
-import org.artoolkit.ar.jpct.TrackableLight;
 import org.artoolkit.ar.jpct.TrackableObject3d;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +41,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends ArJpctActivity {
+    String your_IP_address = "192.168.0.103:8000"; /* Enter your IP address : port */
+    String your_web_app = "value"; /* Replace this with your own web app name */
+    private String baseUrl = "http://" + your_IP_address + "/" + your_web_app + "/";
+
     private static String url= "http://api.androidhive.info/contacts/"; // SERVER FETCH URL
     ArrayList<HashMap<String, String>> contactList = new ArrayList<>();
     final Context context = this;
@@ -60,20 +52,29 @@ public class MainActivity extends ArJpctActivity {
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
     private ArrayList<Object3D> modelList = new ArrayList<>();
     private boolean firstTap = true;
-    private int currentModel = 0;
     private World world;
     private Context mContext;
-    private int legoModelStructureID;
+    private int legoModelStructureID; // ETO ID NG LEGO MODEL TLGA LIKE 0 SNOWCAT 1 PYRAMID
     private LegoModel lm;
     private TextView brickTypeTextView;
     private ImageView brickTypeImageView;
     private TextView brickStepTextView;
+    //private int currentStep = -1; //to be CHANGED
+    private int maxStep;
+    private String modelName;
+    private int currentBuiltModel = -1;
+    private int nextStep = 0; //to be CHANGED
+    private boolean loadModelDone = false;
+    private boolean isNewStep = false; //SHOYLD BE FALSE
+    private int previouslyRecievedStep = -1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getIntent().setAction("Already created");
         setContentView(R.layout.activity_main);
+
+        System.out.println("ANG ORAS AY SEX");
 
         brickTypeTextView = (TextView) findViewById(R.id.brick_type);
         brickTypeImageView = (ImageView) findViewById(R.id.brick_pic);
@@ -83,58 +84,96 @@ public class MainActivity extends ArJpctActivity {
         lm = new LegoModel();
         mContext = this.getApplicationContext();
         this.legoModelStructureID = Integer.parseInt(getIntent().getStringExtra("LEGO_MODEL_ID"));
-        mainLayout = supplyFrameLayout();
-        // When the screen is tapped, inform the renderer and vibrate the phone
-        mainLayout.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
 
-                if (firstTap) {
-                    for (int i = 0; i < modelList.size(); i++) {
-                        tckobj.removeChild(modelList.get(i));
-                    }
-                    firstTap = !firstTap;
-                } else if (currentModel < modelList.size()) {
-                    tckobj.addChild(modelList.get(currentModel));
-                    updateBrickTypeTV(modelList.get(currentModel).getName(), currentModel);
-                    currentModel += 1;
-                } else {
-                    currentModel = 0;
-                    firstTap = !firstTap;
-                    brickTypeImageView.setImageResource(0);
-                    brickStepTextView.setText("");
-                    brickTypeTextView.setText("");
-                    // custom dialog
-                    final Dialog dialog = new Dialog(context);
-                    dialog.setContentView(R.layout.custom_dialog);
-                    dialog.setTitle("Title...");
+        //while (loadModelDone == false) {}
+        //DIS IS NEEDED IN THE START, REMOVE ALL THEN ADD 1 by 1
 
-                    // set the custom dialog components - text, image and button
-                    TextView text = (TextView) dialog.findViewById(R.id.text);
-                    text.setText("Congratulations! you have successfully build " + lm.getModelName(legoModelStructureID));
-                    ImageView image = (ImageView) dialog.findViewById(R.id.image);
-                    image.setImageResource(lm.getImageResource(legoModelStructureID));
+        // POSSIBLE BUG IN THE FUTURE
+        // populateTrackableObjects IS USED AS INITIALIZATION
+    }
 
-                    Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
-                    // if button is clicked, close the custom dialog
-                    dialogButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            dialog.dismiss();
-                            finish();
-                        }
-                    });
+    @Override
+    public void onPause() {
+        super.onPause();
+        modelUpdaterHandler.removeCallbacks(modelUpdaterRunnable);
+    }
 
-                    dialog.show();
+    //THREADING ON BRICK UPDATE
+    Handler initializeHandler = new Handler();
+
+    Runnable initializeRunnable = new Runnable() {
+        public void run() {
+            removeAllModelsOnScreen();
+            modelUpdaterHandler.postDelayed(modelUpdaterRunnable, 0);
+        }
+    };
+
+    //THREADING ON BRICK UPDATE
+    Handler modelUpdaterHandler = new Handler();
+
+    Runnable modelUpdaterRunnable = new Runnable() {
+        public void run() {
+        //DO SOMESHIT HERE
+            new Recheck().execute();
+//            nextStep = 0;
+
+            System.out.println("THREAD IS RUNNING!!");
+            System.out.println("currPota " + currentBuiltModel);
+            System.out.println("nextPota" + nextStep);
+            System.out.println("maxPota" + maxStep);
+
+            if(nextStep != maxStep) {
+                if(isNewStep) {
+                    System.out.println("PUMASOK SA ETITS");
+                    updateModelOnScreen();
+                    isNewStep = false;
                 }
-
-                //call server to get data on tap
-                new GetContacts().execute();
-                Vibrator vib = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-                vib.vibrate(100);
-
+                modelUpdaterHandler.postDelayed(this, 2000);
             }
+            else {
+                finishBuilding();
+                modelUpdaterHandler.removeCallbacks(modelUpdaterRunnable);
+            }
+    }
+    };
 
+    private void finishBuilding() {
+        System.out.println("WTFPASOK");
+        brickTypeImageView.setImageResource(0);
+        brickStepTextView.setText("");
+        brickTypeTextView.setText("");
+
+        // custom dialog
+        final Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.custom_dialog);
+        dialog.setTitle("Title...");
+
+        // set the custom dialog components - text, image and button
+        TextView text = (TextView) dialog.findViewById(R.id.text);
+        text.setText("Congratulations! you have successfully build " + lm.getModelName(legoModelStructureID));
+        ImageView image = (ImageView) dialog.findViewById(R.id.image);
+        image.setImageResource(lm.getImageResource(legoModelStructureID));
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+        // if button is clicked, close the custom dialog
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                finish();
+            }
         });
+
+        dialog.show();
+    }
+
+    private void updateModelOnScreen() {
+        System.out.println("MODEL SIZE " + modelList.size() );
+        if (nextStep  < modelList.size()) {
+            System.out.println("SEX: " + nextStep);
+            tckobj.addChild(modelList.get(nextStep));
+            updateBrickTypeTV(modelList.get(nextStep).getName(), nextStep);
+        }
     }
 
     private void updateBrickTypeTV(String name, int step) {
@@ -168,6 +207,14 @@ public class MainActivity extends ArJpctActivity {
         brickStepTextView.setText("STEP:"+ step + "/" + modelList.size());
         brickTypeTextView.setText(brick);
 
+    }
+
+    private void removeAllModelsOnScreen() {
+        System.out.println("RIP " + modelList.size());
+        for (int i = 0; i < modelList.size(); i++) {
+            tckobj.removeChild(modelList.get(i));
+        }
+        System.out.println("REMOVED");
     }
 
     @Override
@@ -206,30 +253,6 @@ public class MainActivity extends ArJpctActivity {
         TextureManager.getInstance().addTexture("3001_14", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_black)), 64, 64));
         TextureManager.getInstance().addTexture("3003_0", texture);
-/*        try {
-            legoModel1 = loadModel("one_three.3ds", 15);
-            legoModel1.setTexture("one_three_green");
-   *//*         legoModel1.strip();
-            legoModel1.build();*//*
-            tckobj.addChild(legoModel1);
-            modelList.add(legoModel1);
-
-            legoModel2 = loadModel("duplo4.3ds", 30);
-            legoModel2.setOrigin(new SimpleVector(150, -150, 30));
-            tckobj.addChild(legoModel2);
-            modelList.add(legoModel2);
-
-
-          *//*  // Put a plane to see where it cuts
-            Object3D object3D = Primitives.getPlane(2, 200);
-            // Planes are rotated 180 degrees, so we need to flip them
-            object3D.rotateX((float) Math.PI);
-            object3D.setOrigin(new SimpleVector(125, 125, 0));
-            //object3D.setTexture("moon_ground");
-            tckobj.addChild(object3D);*//*
-        } catch (IOException e) {
-           e.printStackTrace();
-        }*/
 
         AssetManager assetManager = getResources().getAssets();
         // To load text file
@@ -316,8 +339,10 @@ public class MainActivity extends ArJpctActivity {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
         this.list.add(tckobj);
+
+        initializeHandler.postDelayed(initializeRunnable, 0);
+        System.out.println("KAKATAPOS LANG NG LOAD");
     }
 
     private Object3D loadModel(String filename, float scale) throws IOException {
@@ -341,11 +366,23 @@ public class MainActivity extends ArJpctActivity {
     /**
      * Async task class to get json by making HTTP call
      */
-    private class GetContacts extends AsyncTask<Void, Void, Void> {
+    private class Recheck extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            //HARD CODE
+            maxStep = modelList.size();
+            nextStep = 2;
+            //HARD CODE
+
+            // IF NEXT STEP HAS CHANGED
+            if(nextStep != previouslyRecievedStep)
+            {
+                isNewStep = true;
+                previouslyRecievedStep = nextStep;
+            }
+
             // Showing progress dialog
 /*            pDialog = new ProgressDialog(MainActivity.this);
             pDialog.setMessage("Please wait...");
@@ -356,47 +393,32 @@ public class MainActivity extends ArJpctActivity {
 
         @Override
         protected Void doInBackground(Void... arg0) {
+
+
             HttpHandler sh = new HttpHandler();
 
             // Making a request to url and getting response
-            String jsonStr = sh.makeServiceCall(url);
+            String jsonStr = sh.makeServiceCall(baseUrl);
 
             Log.e(TAG, "Response from url: " + jsonStr);
+            //jsonStr = "{ 'data': [{'currentStep': '2', 'maxStep': '3', 'modelName': 'Snowcat'}] }";
 
             if (jsonStr != null) {
                 try {
                     JSONObject jsonObj = new JSONObject(jsonStr);
 
                     // Getting JSON Array node
-                    JSONArray contacts = jsonObj.getJSONArray("contacts");
+                    JSONArray data = jsonObj.getJSONArray("data");
 
                     // looping through All Contacts
-                    for (int i = 0; i < contacts.length(); i++) {
-                        JSONObject c = contacts.getJSONObject(i);
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject d = data.getJSONObject(i);
 
-                        String id = c.getString("id");
-                        String name = c.getString("name");
-                        String email = c.getString("email");
-                        String address = c.getString("address");
-                        String gender = c.getString("gender");
+                        nextStep = d.getInt("currentStep");
+                        maxStep = d.getInt("maxStep");
+                        modelName = d.getString("modelName");
 
-                        // Phone node is JSON Object
-                        JSONObject phone = c.getJSONObject("phone");
-                        String mobile = phone.getString("mobile");
-                        String home = phone.getString("home");
-                        String office = phone.getString("office");
 
-                        // tmp hash map for single contact
-                        HashMap<String, String> contact = new HashMap<>();
-
-                        // adding each child node to HashMap key => value
-                        contact.put("id", id);
-                        contact.put("name", name);
-                        contact.put("email", email);
-                        contact.put("mobile", mobile);
-
-                        // adding contact to contact list
-                        contactList.add(contact);
                     }
                 } catch (final JSONException e) {
                     Log.e(TAG, "Json parsing error: " + e.getMessage());
@@ -431,21 +453,11 @@ public class MainActivity extends ArJpctActivity {
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-/*            // Dismiss the progress dialog
-*//*            if (pDialog.isShowing())
-                pDialog.dismiss();*//*
-            *//**
-             * Updating parsed JSON data into ListView
-             * *//*
-            ListAdapter adapter = new SimpleAdapter(
-                    MainActivity.this, contactList,
-                    R.layout.list_item, new String[]{"name", "email",
-                    "mobile"}, new int[]{R.id.name,
-                    R.id.email, R.id.mobile});
 
-            lv.setAdapter(adapter);*/
+            Log.d(TAG, "nextStep " + nextStep);
+            Log.d(TAG, "maxStep " + maxStep);
+            Log.d(TAG, "modelName " + modelName);
 
-            Log.d(TAG, "eto" + contactList.get(0).get("name"));
         }
 
     }
