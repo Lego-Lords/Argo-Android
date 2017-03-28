@@ -1,12 +1,17 @@
 package com.daqri.nftwithmodels;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.apache.http.client.HttpClient;
@@ -22,7 +27,8 @@ import okhttp3.Response;
 
 public class SelectionScreenActivity extends AppCompatActivity {
 
-    String your_IP_address = "192.168.0.103:8000";  //Enter your IP address : port
+    //String your_IP_address = "192.168.0.110:8000";  //Enter your IP address : port
+    private String your_IP_address = "";
 
     ViewPager viewPager;
     CustomSwipeAdapter adapter;
@@ -47,6 +53,10 @@ public class SelectionScreenActivity extends AppCompatActivity {
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         adapter =  new CustomSwipeAdapter(this);
         build_button = (Button) findViewById(R.id.build_button);
+
+        //HINGI IP_ADDRESS
+        buildIPDialog();
+
         viewPager.setAdapter(adapter);
 
         build_button.setOnClickListener(new View.OnClickListener() {
@@ -57,14 +67,38 @@ public class SelectionScreenActivity extends AppCompatActivity {
                 task.execute();
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 intent.putExtra("LEGO_MODEL_ID", String.valueOf(viewPager.getCurrentItem()));
+                intent.putExtra("IP_ADDRESS", your_IP_address);
                 startActivity(intent);
             }
         });
 
     }
 
-    private String buildJSON(int s) {
-        return "{'modelName': " + "'" + lm.getModelFileName(s) + "'}";
+    private void buildIPDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Input IP of Server");
+
+// Set up the input
+        final EditText input = new EditText(this);
+// Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+// Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                your_IP_address = input.getText().toString();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
     }
 
     public class PostTask extends AsyncTask<String, Void, String> {
@@ -86,7 +120,7 @@ public class SelectionScreenActivity extends AppCompatActivity {
 
         private String post(String modelName) throws IOException {
             String your_web_app = "model-id?id="+modelName+"";  //Replace this with your own web app name
-            String baseUrl = "http://" + your_IP_address + "/" + your_web_app + "/";
+            String baseUrl = "http://" + your_IP_address + "/" + your_web_app;
 
             Request request = new Request.Builder()
                     .url(baseUrl)
@@ -94,16 +128,5 @@ public class SelectionScreenActivity extends AppCompatActivity {
             Response response = client.newCall(request).execute();
             return response.body().string();
         }
-    }
-    public String bowlingJson(String player1, String player2) {
-        return "{'winCondition':'HIGH_SCORE',"
-                + "'name':'Bowling',"
-                + "'round':4,"
-                + "'lastSaved':1367702411696,"
-                + "'dateStarted':1367702378785,"
-                + "'players':["
-                + "{'name':'" + player1 + "','history':[10,8,6,7,8],'color':-13388315,'total':39},"
-                + "{'name':'" + player2 + "','history':[6,10,5,10,10],'color':-48060,'total':41}"
-                + "]}";
     }
 }

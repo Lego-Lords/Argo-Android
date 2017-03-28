@@ -41,7 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends ArJpctActivity {
-    String your_IP_address = "192.168.0.103:8000"; /* Enter your IP address : port */
+    String your_IP_address = "192.168.0.110:8000"; /* Enter your IP address : port */
     String your_web_app = "value"; /* Replace this with your own web app name */
     private String baseUrl = "http://" + your_IP_address + "/" + your_web_app + "/";
 
@@ -60,10 +60,10 @@ public class MainActivity extends ArJpctActivity {
     private ImageView brickTypeImageView;
     private TextView brickStepTextView;
     //private int currentStep = -1; //to be CHANGED
-    private int maxStep;
+    private int maxStep = 0;
+    private int nextStep = -1; //to be CHANGED
     private String modelName;
     private int currentBuiltModel = -1;
-    private int nextStep = 0; //to be CHANGED
     private boolean loadModelDone = false;
     private boolean isNewStep = false; //SHOYLD BE FALSE
     private int previouslyRecievedStep = -1;
@@ -84,6 +84,7 @@ public class MainActivity extends ArJpctActivity {
         lm = new LegoModel();
         mContext = this.getApplicationContext();
         this.legoModelStructureID = Integer.parseInt(getIntent().getStringExtra("LEGO_MODEL_ID"));
+        this.your_IP_address = getIntent().getStringExtra("IP_ADDRESS");
 
         //while (loadModelDone == false) {}
         //DIS IS NEEDED IN THE START, REMOVE ALL THEN ADD 1 by 1
@@ -118,9 +119,9 @@ public class MainActivity extends ArJpctActivity {
 //            nextStep = 0;
 
             System.out.println("THREAD IS RUNNING!!");
-            System.out.println("currPota " + currentBuiltModel);
-            System.out.println("nextPota" + nextStep);
-            System.out.println("maxPota" + maxStep);
+            System.out.println("BRICK UPDATER: currPota " + currentBuiltModel);
+            System.out.println("BRICK UPDATER: nextPota" + nextStep);
+            System.out.println("BRICK UPDATER: maxPota" + maxStep);
 
             if(nextStep != maxStep) {
                 if(isNewStep) {
@@ -328,7 +329,7 @@ public class MainActivity extends ArJpctActivity {
                     brickModel.setTexture(modelID + "_" + color);
                     brickModel.setName(modelID + "_" + color);
                     brickModel.setRotationMatrix(rotMatrix);
-                    brickModel.setOrigin(new SimpleVector(yPos+200, xPos-200, zPos));
+                    brickModel.setOrigin(new SimpleVector(yPos+200, xPos-200, zPos-25));
 
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
@@ -371,10 +372,10 @@ public class MainActivity extends ArJpctActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            //HARD CODE
+/*            //HARD CODE
             maxStep = modelList.size();
             nextStep = 2;
-            //HARD CODE
+            //HARD CODE*/
 
             // IF NEXT STEP HAS CHANGED
             if(nextStep != previouslyRecievedStep)
@@ -433,19 +434,20 @@ public class MainActivity extends ArJpctActivity {
                     });
 
                 }
-            } else {
-                Log.e(TAG, "Couldn't get json from server.");
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(),
-                                "Couldn't get json from server. Check LogCat for possible errors!",
-                                Toast.LENGTH_LONG)
-                                .show();
-                    }
-                });
-
             }
+//            else {
+//                Log.e(TAG, "Couldn't get json from server.");
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        Toast.makeText(getApplicationContext(),
+//                                "Couldn't get json from server. Check LogCat for possible errors!",
+//                                Toast.LENGTH_LONG)
+//                                .show();
+//                    }
+//                });
+//
+//            }
 
             return null;
         }
@@ -454,9 +456,9 @@ public class MainActivity extends ArJpctActivity {
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
 
-            Log.d(TAG, "nextStep " + nextStep);
-            Log.d(TAG, "maxStep " + maxStep);
-            Log.d(TAG, "modelName " + modelName);
+            Log.d(TAG, "BRICK SERVER: nextStep " + nextStep);
+            Log.d(TAG, "BRICK SERVER: maxStep " + maxStep);
+            Log.d(TAG, "BRICK SERVER: modelName " + modelName);
 
         }
 
