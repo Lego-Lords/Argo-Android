@@ -61,7 +61,9 @@ public class MainActivity extends ArJpctActivity {
     private TextView brickStepTextView;
     //private int currentStep = -1; //to be CHANGED
     private int maxStep = 0;
+//    private int maxStep = 13; // TEST
     private int nextStep = -1; //to be CHANGED
+//    private int nextStep = 4; //TEST
     private String modelName;
     private int currentBuiltModel = -1;
     private boolean loadModelDone = false;
@@ -116,7 +118,7 @@ public class MainActivity extends ArJpctActivity {
         public void run() {
         //DO SOMESHIT HERE
             new Recheck().execute();
-//            nextStep = 0;
+//            nextStep++;
 
             System.out.println("THREAD IS RUNNING!!");
             System.out.println("BRICK UPDATER: currPota " + currentBuiltModel);
@@ -151,7 +153,7 @@ public class MainActivity extends ArJpctActivity {
 
         // set the custom dialog components - text, image and button
         TextView text = (TextView) dialog.findViewById(R.id.text);
-        text.setText("Congratulations! you have successfully build " + lm.getModelName(legoModelStructureID));
+        text.setText("Congratulations! you have successfully built " + lm.getModelName(legoModelStructureID));
         ImageView image = (ImageView) dialog.findViewById(R.id.image);
         image.setImageResource(lm.getImageResource(legoModelStructureID));
 
@@ -172,8 +174,38 @@ public class MainActivity extends ArJpctActivity {
         System.out.println("MODEL SIZE " + modelList.size() );
         if (nextStep  < modelList.size()) {
             System.out.println("SEX: " + nextStep);
-            tckobj.addChild(modelList.get(nextStep));
+//            if(checkIfChildExist(tckobj)) {
+//                Log.d("checkchild", "pasok");
+//                removeModelUntilStep(nextStep-1);
+//            }
+            completeModelUntilStep(nextStep);
+            //tckobj.addChild(modelList.get(nextStep));
             updateBrickTypeTV(modelList.get(nextStep).getName(), nextStep);
+        }
+    }
+
+    private boolean checkIfChildExist(TrackableObject3d tckobj) {
+        for(int i = 0; i <= nextStep; i++)
+        {
+            Log.d("checkchild", String.valueOf(nextStep) );
+            if(tckobj.hasChild(modelList.get(i)))
+                return true;
+        }
+        return false;
+    }
+
+    private void removeModelUntilStep(int nextStep) {
+        for(int i = 0; i <= nextStep; i++)
+        {
+            tckobj.removeChild(modelList.get(i));
+        }
+    }
+
+    //COMPLETE MODEL GIVEN STEP (UNTESTED IN REAL SERVER)
+    private void completeModelUntilStep(int nextStep) {
+        for(int i = 0; i <= nextStep; i++)
+        {
+            tckobj.addChild(modelList.get(i));
         }
     }
 
@@ -186,6 +218,12 @@ public class MainActivity extends ArJpctActivity {
 
         switch(result[0])
         {
+            case "2456": brick = "2x6";
+                switch (result[1])
+                {
+                    case "2": brickTypeImageView.setImageResource(R.drawable.step_2456_2); break;
+                }
+                break;
             case "3001": brick = "2x4";
                 switch (result[1])
                 {
@@ -195,13 +233,28 @@ public class MainActivity extends ArJpctActivity {
                     case "15": brickTypeImageView.setImageResource(R.drawable.step_3001_15); break;
                 }
                 break;
+            case "3002": brick = "2x3";
+                switch (result[1])
+                {
+                    case "1": brickTypeImageView.setImageResource(R.drawable.step_3002_1); break;
+                    case "25": brickTypeImageView.setImageResource(R.drawable.step_3002_25); break;
+                }
+                break;
             case "3003": brick = "2x2";
                 switch (result[1])
                 {
                     case "0": brickTypeImageView.setImageResource(R.drawable.step_3003_0); break;
+                    case "1": brickTypeImageView.setImageResource(R.drawable.step_3003_1); break;
+                    case "2": brickTypeImageView.setImageResource(R.drawable.step_3003_2); break;
                     case "15": brickTypeImageView.setImageResource(R.drawable.step_3003_15); break;
                 }
                 break;
+            case "3004": brick = "1x2";
+            switch (result[1])
+            {
+                case "27": brickTypeImageView.setImageResource(R.drawable.step_3004_27); break;
+            }
+            break;
             case "3005": brick = "1x1"; break;
         }
 
@@ -254,6 +307,19 @@ public class MainActivity extends ArJpctActivity {
         TextureManager.getInstance().addTexture("3001_14", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_black)), 64, 64));
         TextureManager.getInstance().addTexture("3003_0", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_2456_green)), 64, 64));
+        TextureManager.getInstance().addTexture("2456_2", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3002_blue)), 64, 64));
+        TextureManager.getInstance().addTexture("3002_1", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3002_orange)), 64, 64));
+        TextureManager.getInstance().addTexture("3002_25", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_blue)), 64, 64));
+        TextureManager.getInstance().addTexture("3003_1", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_green)), 64, 64));
+        TextureManager.getInstance().addTexture("3003_2", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3004_lime)), 64, 64));
+        TextureManager.getInstance().addTexture("3004_27", texture);
+
 
         AssetManager assetManager = getResources().getAssets();
         // To load text file
@@ -402,7 +468,7 @@ public class MainActivity extends ArJpctActivity {
             String jsonStr = sh.makeServiceCall(baseUrl);
 
             Log.e(TAG, "Response from url: " + jsonStr);
-            //jsonStr = "{ 'data': [{'currentStep': '2', 'maxStep': '3', 'modelName': 'Snowcat'}] }";
+            jsonStr = "{ 'data': [{'currentStep': '2', 'maxStep': '13', 'modelName': 'Snowcat'}] }"; //dummy data in case no server
 
             if (jsonStr != null) {
                 try {
@@ -418,6 +484,8 @@ public class MainActivity extends ArJpctActivity {
                         nextStep = d.getInt("currentStep");
                         maxStep = d.getInt("maxStep");
                         modelName = d.getString("modelName");
+                        Log.d("fromServer", String.valueOf(nextStep));
+                        Log.d("fromServer", String.valueOf(maxStep));
 
 
                     }

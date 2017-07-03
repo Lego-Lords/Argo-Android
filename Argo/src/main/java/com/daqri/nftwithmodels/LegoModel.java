@@ -4,9 +4,9 @@ package com.daqri.nftwithmodels;
  * Created by Kingston on 3/7/2017.
  */
 public class LegoModel {
-    private int[] image_resource = {R.drawable.snowcat, R.drawable.pyramid};
-    private String[] lego_name = {"Snowcat", "Pyramid"};
-    private String[] lego_filename = {"snowcat", "pyramid"};
+    private int[] image_resource = {R.drawable.snowcat, R.drawable.pyramid, R.drawable.tree};
+    private String[] lego_name = {"Snowcat", "Pyramid", "Tree"};
+    private String[] lego_filename = {"snowcat", "pyramid", "tree"};
 
     public int getImageResource(int index){
         return this.image_resource[index];
