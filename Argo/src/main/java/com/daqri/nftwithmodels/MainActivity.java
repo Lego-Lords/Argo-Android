@@ -61,9 +61,9 @@ public class MainActivity extends ArJpctActivity {
     private TextView brickStepTextView;
     //private int currentStep = -1; //to be CHANGED
     private int maxStep = 0;
-//    private int maxStep = 13; // TEST
+   // private int maxStep = 13; TEST
     private int nextStep = -1; //to be CHANGED
-//    private int nextStep = 4; //TEST
+    //private int nextStep = 4; //TEST
     private String modelName;
     private int currentBuiltModel = -1;
     private boolean loadModelDone = false;
@@ -87,6 +87,9 @@ public class MainActivity extends ArJpctActivity {
         mContext = this.getApplicationContext();
         this.legoModelStructureID = Integer.parseInt(getIntent().getStringExtra("LEGO_MODEL_ID"));
         this.your_IP_address = getIntent().getStringExtra("IP_ADDRESS");
+        System.out.println("IP ADD " + your_IP_address);
+        baseUrl = "http://" + your_IP_address + "/" + your_web_app + "/";
+
 
         //while (loadModelDone == false) {}
         //DIS IS NEEDED IN THE START, REMOVE ALL THEN ADD 1 by 1
@@ -118,7 +121,7 @@ public class MainActivity extends ArJpctActivity {
         public void run() {
         //DO SOMESHIT HERE
             new Recheck().execute();
-//            nextStep++;
+            //nextStep++;
 
             System.out.println("THREAD IS RUNNING!!");
             System.out.println("BRICK UPDATER: currPota " + currentBuiltModel);
@@ -174,10 +177,10 @@ public class MainActivity extends ArJpctActivity {
         System.out.println("MODEL SIZE " + modelList.size() );
         if (nextStep  < modelList.size()) {
             System.out.println("SEX: " + nextStep);
-//            if(checkIfChildExist(tckobj)) {
-//                Log.d("checkchild", "pasok");
-//                removeModelUntilStep(nextStep-1);
-//            }
+            if(checkIfChildExist(tckobj)) {
+                Log.d("checkchild", "pasok");
+                removeModelUntilStep(nextStep-1);
+            }
             completeModelUntilStep(nextStep);
             //tckobj.addChild(modelList.get(nextStep));
             updateBrickTypeTV(modelList.get(nextStep).getName(), nextStep);
@@ -468,7 +471,7 @@ public class MainActivity extends ArJpctActivity {
             String jsonStr = sh.makeServiceCall(baseUrl);
 
             Log.e(TAG, "Response from url: " + jsonStr);
-            jsonStr = "{ 'data': [{'currentStep': '2', 'maxStep': '13', 'modelName': 'Snowcat'}] }"; //dummy data in case no server
+            //jsonStr = "{ 'data': [{'currentStep': '2', 'maxStep': '13', 'modelName': 'Snowcat'}] }"; //dummy data in case no server
 
             if (jsonStr != null) {
                 try {
