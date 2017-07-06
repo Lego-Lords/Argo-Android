@@ -48,7 +48,7 @@ public class MainActivity extends ArJpctActivity {
     private static String url= "http://api.androidhive.info/contacts/"; // SERVER FETCH URL
     ArrayList<HashMap<String, String>> contactList = new ArrayList<>();
     final Context context = this;
-    private List<TrackableObject3d> list;
+    private List<TrackableObject3d> tckobjList;
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
     private ArrayList<Object3D> modelList = new ArrayList<>();
     private boolean firstTap = true;
@@ -102,6 +102,7 @@ public class MainActivity extends ArJpctActivity {
     public void onPause() {
         super.onPause();
         modelUpdaterHandler.removeCallbacks(modelUpdaterRunnable);
+        nextStepAnimationHandler.removeCallbacks(nextStepAnimationRunnable);
     }
 
     //THREADING ON BRICK UPDATE
@@ -111,6 +112,7 @@ public class MainActivity extends ArJpctActivity {
         public void run() {
             removeAllModelsOnScreen();
             modelUpdaterHandler.postDelayed(modelUpdaterRunnable, 0);
+            nextStepAnimationHandler.postDelayed(nextStepAnimationRunnable, 0);
         }
     };
 
@@ -141,6 +143,24 @@ public class MainActivity extends ArJpctActivity {
                 modelUpdaterHandler.removeCallbacks(modelUpdaterRunnable);
             }
     }
+    };
+
+    //THREADING ON BRICK UPDATE
+    Handler nextStepAnimationHandler = new Handler();
+
+    Runnable nextStepAnimationRunnable = new Runnable() {
+        public void run() {
+            Log.d("animNextStep","PASOK: " + nextStep);
+            if(nextStep!=-1) {
+                if(modelList.get(nextStep).getTranslation().z > 0) // moves down
+                    modelList.get(nextStep).translate(new SimpleVector(0, 0, -20));
+                else
+                    modelList.get(nextStep).translate(new SimpleVector(0, 0, 60)); // return to elevated offset
+                Log.d("animNextStep","Z VALUE: " + String.valueOf(modelList.get(nextStep).getOrigin().z));
+                Log.d("animNextStep","TRANSLATION VALUE: " + modelList.get(nextStep).getTranslation().z);
+            }
+            nextStepAnimationHandler.postDelayed(nextStepAnimationRunnable, 500);
+        }
     };
 
     private void finishBuilding() {
@@ -295,7 +315,7 @@ public class MainActivity extends ArJpctActivity {
     }
 
     protected void populateTrackableObjects(List<TrackableObject3d> list) {
-        this.list = list;
+        this.tckobjList = list;
         //Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.one_three_green)), 64, 64));
         //TextureManager.getInstance().addTexture("one_three_green", texture);
         Texture texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_white)), 64, 64));
@@ -400,6 +420,7 @@ public class MainActivity extends ArJpctActivity {
                     brickModel.setName(modelID + "_" + color);
                     brickModel.setRotationMatrix(rotMatrix);
                     brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10)+100, xPos*(scaleFactor/10)-100, zPos*(scaleFactor/10)-0));
+//                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10), xPos*(scaleFactor/10), zPos*(scaleFactor/10)-0));
 
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
@@ -410,7 +431,11 @@ public class MainActivity extends ArJpctActivity {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        this.list.add(tckobj);
+//        tckobj.setOrigin(new SimpleVector(0,0,80));
+//        tckobj.setOrigin(new SimpleVector(0,0,0));
+//        tckobj.setOrigin(new SimpleVector(0,0,200));
+//        tckobj.setOrigin(new SimpleVector(0,100,0));
+        this.tckobjList.add(tckobj);
 
         initializeHandler.postDelayed(initializeRunnable, 0);
         System.out.println("KAKATAPOS LANG NG LOAD");
