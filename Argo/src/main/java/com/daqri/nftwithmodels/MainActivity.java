@@ -394,11 +394,12 @@ public class MainActivity extends ArJpctActivity {
                         rotMatrix = initMatrix;
                     }
                     // build brick model
-                    Object3D brickModel = loadModel(modelID + ".3ds", 10);
+                    float scaleFactor = 20;
+                    Object3D brickModel = loadModel(modelID + ".3ds", scaleFactor); //DIS SCALE
                     brickModel.setTexture(modelID + "_" + color);
                     brickModel.setName(modelID + "_" + color);
                     brickModel.setRotationMatrix(rotMatrix);
-                    brickModel.setOrigin(new SimpleVector(yPos+200, xPos-200, zPos-25));
+                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10)+100, xPos*(scaleFactor/10)-100, zPos*(scaleFactor/10)-0));
 
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
@@ -471,7 +472,7 @@ public class MainActivity extends ArJpctActivity {
             String jsonStr = sh.makeServiceCall(baseUrl);
 
             Log.e(TAG, "Response from url: " + jsonStr);
-            //jsonStr = "{ 'data': [{'currentStep': '2', 'maxStep': '13', 'modelName': 'Snowcat'}] }"; //dummy data in case no server
+            jsonStr = "{ 'data': [{'currentStep': '6', 'maxStep': '7', 'modelName': 'Duck'}] }"; //dummy data in case no server
 
             if (jsonStr != null) {
                 try {
