@@ -122,7 +122,7 @@ public class CaptureCameraPreview extends SurfaceView implements SurfaceHolder.C
     @SuppressLint("NewApi")
 	@Override
     public void surfaceCreated(SurfaceHolder holder) {
-        
+
 		int cameraIndex = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(getContext()).getString("pref_cameraIndex", "0"));
     	Log.i(TAG, "Opening camera " + (cameraIndex + 1));
     	try {

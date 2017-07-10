@@ -3,6 +3,7 @@ package com.daqri.nftwithmodels;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -64,6 +65,7 @@ public class MainActivity extends ArJpctActivity {
    // private int maxStep = 13; TEST
     private int nextStep = -1; //to be CHANGED
     //private int nextStep = 4; //TEST
+    private int hasError = -1;
     private String modelName;
     private int currentBuiltModel = -1;
     private boolean loadModelDone = false;
@@ -133,6 +135,7 @@ public class MainActivity extends ArJpctActivity {
             if(nextStep != maxStep) {
                 if(isNewStep) {
                     System.out.println("PUMASOK SA ETITS");
+                    updateErrorTV();
                     updateModelOnScreen();
                     isNewStep = false;
                 }
@@ -145,21 +148,25 @@ public class MainActivity extends ArJpctActivity {
     }
     };
 
+    private void updateErrorTV() {
+
+    }
+
     //THREADING ON BRICK UPDATE
     Handler nextStepAnimationHandler = new Handler();
 
     Runnable nextStepAnimationRunnable = new Runnable() {
         public void run() {
-            Log.d("animNextStep","PASOK: " + nextStep);
-            if(nextStep!=-1) {
+//            Log.d("animNextStep", "PASOK: " + nextStep);
+            if(nextStep!=-1 && nextStep!=maxStep) {
                 if(modelList.get(nextStep).getTranslation().z > 0) // moves down
-                    modelList.get(nextStep).translate(new SimpleVector(0, 0, -20));
+                    modelList.get(nextStep).translate(new SimpleVector(0, 0, -1));
                 else
-                    modelList.get(nextStep).translate(new SimpleVector(0, 0, 60)); // return to elevated offset
-                Log.d("animNextStep","Z VALUE: " + String.valueOf(modelList.get(nextStep).getOrigin().z));
-                Log.d("animNextStep","TRANSLATION VALUE: " + modelList.get(nextStep).getTranslation().z);
+                    modelList.get(nextStep).translate(new SimpleVector(0, 0, 70)); // return to elevated offset
+//                Log.d("animNextStep","Z VALUE: " + String.valueOf(modelList.get(nextStep).getOrigin().z));
+//                Log.d("animNextStep","TRANSLATION VALUE: " + modelList.get(nextStep).getTranslation().z);
             }
-            nextStepAnimationHandler.postDelayed(nextStepAnimationRunnable, 500);
+            nextStepAnimationHandler.postDelayed(nextStepAnimationRunnable, 20);
         }
     };
 
@@ -177,6 +184,7 @@ public class MainActivity extends ArJpctActivity {
         // set the custom dialog components - text, image and button
         TextView text = (TextView) dialog.findViewById(R.id.text);
         text.setText("Congratulations! you have successfully built " + lm.getModelName(legoModelStructureID));
+        text.setTextColor(Color.parseColor("#000000"));
         ImageView image = (ImageView) dialog.findViewById(R.id.image);
         image.setImageResource(lm.getImageResource(legoModelStructureID));
 
@@ -414,7 +422,7 @@ public class MainActivity extends ArJpctActivity {
                         rotMatrix = initMatrix;
                     }
                     // build brick model
-                    float scaleFactor = 20;
+                    float scaleFactor = 16;
                     Object3D brickModel = loadModel(modelID + ".3ds", scaleFactor); //DIS SCALE
                     brickModel.setTexture(modelID + "_" + color);
                     brickModel.setName(modelID + "_" + color);
@@ -497,7 +505,7 @@ public class MainActivity extends ArJpctActivity {
             String jsonStr = sh.makeServiceCall(baseUrl);
 
             Log.e(TAG, "Response from url: " + jsonStr);
-            jsonStr = "{ 'data': [{'currentStep': '6', 'maxStep': '7', 'modelName': 'Duck'}] }"; //dummy data in case no server
+            jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
 
             if (jsonStr != null) {
                 try {
@@ -513,6 +521,7 @@ public class MainActivity extends ArJpctActivity {
                         nextStep = d.getInt("currentStep");
                         maxStep = d.getInt("maxStep");
                         modelName = d.getString("modelName");
+                        hasError = d.getInt("hasError");
                         Log.d("fromServer", String.valueOf(nextStep));
                         Log.d("fromServer", String.valueOf(maxStep));
 

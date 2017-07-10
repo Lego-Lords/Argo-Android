@@ -8,6 +8,7 @@ import com.threed.jpct.Object3D;
 import com.threed.jpct.World;
 
 import org.artoolkit.ar.base.ARToolKit;
+import org.artoolkit.ar.base.NativeInterface;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,6 +70,8 @@ public class TrackableObject3d extends Object3D {
      * @return
      */
     public boolean registerMarker() {
+        //NativeInterface.arwSetPatternDetectionMode(NativeInterface.AR_MATRIX_CODE_DETECTION);//added by kingston
+        //NativeInterface.arwSetMatrixCodeType(NativeInterface.AR_MATRIX_CODE_3x3_PARITY65); //added by kingston
         mMarkerId = ARToolKit.getInstance().addMarker(mMarkerString);
         return mMarkerId != -1;
     }
