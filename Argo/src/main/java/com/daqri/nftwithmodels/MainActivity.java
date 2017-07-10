@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -60,12 +62,13 @@ public class MainActivity extends ArJpctActivity {
     private TextView brickTypeTextView;
     private ImageView brickTypeImageView;
     private TextView brickStepTextView;
+    private View wrongBrickView;
     //private int currentStep = -1; //to be CHANGED
     private int maxStep = 0;
    // private int maxStep = 13; TEST
     private int nextStep = -1; //to be CHANGED
     //private int nextStep = 4; //TEST
-    private int hasError = -1;
+    private boolean hasError = false;
     private String modelName;
     private int currentBuiltModel = -1;
     private boolean loadModelDone = false;
@@ -83,6 +86,7 @@ public class MainActivity extends ArJpctActivity {
         brickTypeTextView = (TextView) findViewById(R.id.brick_type);
         brickTypeImageView = (ImageView) findViewById(R.id.brick_pic);
         brickStepTextView = (TextView) findViewById(R.id.step_tv);
+        wrongBrickView = findViewById(R.id.wrong_brick_view);
 
         brickTypeTextView.setText("");
         lm = new LegoModel();
@@ -149,7 +153,24 @@ public class MainActivity extends ArJpctActivity {
     };
 
     private void updateErrorTV() {
+        if(hasError){
+            wrongBrickView.setVisibility(View.VISIBLE);
 
+            Animation anim = new AlphaAnimation(0.0f, 1.0f);
+
+            anim.setDuration(350); //You can manage the blinking time with this parameter
+
+            anim.setStartOffset(20);
+
+            anim.setRepeatMode(Animation.REVERSE);
+
+            anim.setRepeatCount(Animation.INFINITE);
+
+            wrongBrickView.startAnimation(anim);
+        } else {
+            wrongBrickView.setVisibility(View.INVISIBLE);
+            wrongBrickView.clearAnimation();
+        }
     }
 
     //THREADING ON BRICK UPDATE
@@ -505,7 +526,7 @@ public class MainActivity extends ArJpctActivity {
             String jsonStr = sh.makeServiceCall(baseUrl);
 
             Log.e(TAG, "Response from url: " + jsonStr);
-            jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
+            jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '1'}] }"; //dummy data in case no server
 
             if (jsonStr != null) {
                 try {
@@ -521,7 +542,9 @@ public class MainActivity extends ArJpctActivity {
                         nextStep = d.getInt("currentStep");
                         maxStep = d.getInt("maxStep");
                         modelName = d.getString("modelName");
-                        hasError = d.getInt("hasError");
+                        if(d.getInt("hasError")==1)
+                            hasError = true;
+                        else hasError = false;
                         Log.d("fromServer", String.valueOf(nextStep));
                         Log.d("fromServer", String.valueOf(maxStep));
 
