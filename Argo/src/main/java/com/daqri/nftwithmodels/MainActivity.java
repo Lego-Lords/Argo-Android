@@ -259,6 +259,7 @@ public class MainActivity extends ArJpctActivity {
                 switch (result[1])
                 {
                     case "1": brickTypeImageView.setImageResource(R.drawable.step_3001_1); break;
+                    case "2": brickTypeImageView.setImageResource(R.drawable.step_3001_2); break;
                     case "4": brickTypeImageView.setImageResource(R.drawable.step_3001_4); break;
                     case "14": brickTypeImageView.setImageResource(R.drawable.step_3001_14); break;
                     case "15": brickTypeImageView.setImageResource(R.drawable.step_3001_15); break;
@@ -277,6 +278,8 @@ public class MainActivity extends ArJpctActivity {
                     case "0": brickTypeImageView.setImageResource(R.drawable.step_3003_0); break;
                     case "1": brickTypeImageView.setImageResource(R.drawable.step_3003_1); break;
                     case "2": brickTypeImageView.setImageResource(R.drawable.step_3003_2); break;
+                    case "4": brickTypeImageView.setImageResource(R.drawable.step_3003_4); break;
+                    case "14": brickTypeImageView.setImageResource(R.drawable.step_3003_14); break;
                     case "15": brickTypeImageView.setImageResource(R.drawable.step_3003_15); break;
                 }
                 break;
@@ -332,6 +335,8 @@ public class MainActivity extends ArJpctActivity {
         TextureManager.getInstance().addTexture("3003_15", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_blue)), 64, 64));
         TextureManager.getInstance().addTexture("3001_1", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_green)), 64, 64));
+        TextureManager.getInstance().addTexture("3001_2", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_red)), 64, 64));
         TextureManager.getInstance().addTexture("3001_4", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3001_yellow)), 64, 64));
@@ -348,6 +353,10 @@ public class MainActivity extends ArJpctActivity {
         TextureManager.getInstance().addTexture("3003_1", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_green)), 64, 64));
         TextureManager.getInstance().addTexture("3003_2", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_red)), 64, 64));
+        TextureManager.getInstance().addTexture("3003_4", texture);
+        texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3003_yellow)), 64, 64));
+        TextureManager.getInstance().addTexture("3003_14", texture);
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3004_lime)), 64, 64));
         TextureManager.getInstance().addTexture("3004_27", texture);
 
@@ -505,7 +514,7 @@ public class MainActivity extends ArJpctActivity {
             String jsonStr = sh.makeServiceCall(baseUrl);
 
             Log.e(TAG, "Response from url: " + jsonStr);
-            jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
+            jsonStr = "{ 'data': [{'currentStep': '11', 'maxStep': '12', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
 
             if (jsonStr != null) {
                 try {
@@ -524,7 +533,7 @@ public class MainActivity extends ArJpctActivity {
                         hasError = d.getInt("hasError");
                         Log.d("fromServer", String.valueOf(nextStep));
                         Log.d("fromServer", String.valueOf(maxStep));
-
+                        Log.d("fromServer ERROR", String.valueOf(hasError));
 
                     }
                 } catch (final JSONException e) {
