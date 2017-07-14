@@ -47,7 +47,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends ArJpctActivity {
-    String your_IP_address = "192.168.0.110:8000"; /* Enter your IP address : port */
+    String your_IP_address = ""; /* Enter your IP address : port */
     String your_web_app = "value"; /* Replace this with your own web app name */
     private String baseUrl = "http://" + your_IP_address + "/" + your_web_app + "/";
 
@@ -66,11 +66,11 @@ public class MainActivity extends ArJpctActivity {
     private ImageView brickTypeImageView;
     private TextView brickStepTextView;
     private View wrongBrickView;
-    //private int currentStep = -1; //to be CHANGED
+    private int currentStep = -1; //to be CHANGED
     private int maxStep = 0;
-   // private int maxStep = 13; TEST
+    //private int maxStep = 6; //TEST
     private int nextStep = -1; //to be CHANGED
-    //private int nextStep = 4; //TEST
+    //private int nextStep = 0; //TEST
     private boolean hasError = false;
     private String modelName;
     private int currentBuiltModel = -1;
@@ -146,7 +146,7 @@ public class MainActivity extends ArJpctActivity {
                     updateModelOnScreen();
                     isNewStep = false;
                 }
-                modelUpdaterHandler.postDelayed(this, 0);
+                modelUpdaterHandler.postDelayed(this, 2000);
             }
             else {
                 finishBuilding();
@@ -193,6 +193,7 @@ public class MainActivity extends ArJpctActivity {
             nextStepAnimationHandler.postDelayed(nextStepAnimationRunnable, 20);
         }
     };
+
 
     private void finishBuilding() {
         System.out.println("WTFPASOK");
@@ -242,7 +243,7 @@ public class MainActivity extends ArJpctActivity {
     private boolean checkIfChildExist(TrackableObject3d tckobj) {
         for(int i = 0; i <= nextStep; i++)
         {
-            Log.d("checkchild", String.valueOf(nextStep) );
+            Log.d("checkchild", String.valueOf(nextStep));
             if(tckobj.hasChild(modelList.get(i)))
                 return true;
         }
@@ -316,7 +317,7 @@ public class MainActivity extends ArJpctActivity {
             case "3005": brick = "1x1"; break;
         }
 
-        brickStepTextView.setText("STEP:"+ step + "/" + modelList.size());
+        brickStepTextView.setText("STEP:" + step + "/" + modelList.size());
         brickTypeTextView.setText(brick);
 
     }
@@ -528,8 +529,12 @@ public class MainActivity extends ArJpctActivity {
 
         }
 
+
+
         @Override
         protected Void doInBackground(Void... arg0) {
+
+
 
 
             HttpHandler sh = new HttpHandler();
@@ -538,7 +543,9 @@ public class MainActivity extends ArJpctActivity {
             String jsonStr = sh.makeServiceCall(baseUrl);
             Log.d("dataServer", "Time: " + DateFormat.getDateTimeInstance().format(new Date()));
             Log.e(TAG, "Response from url: " + jsonStr);
-            //jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
+
+            if(your_IP_address.equals(""))
+            jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
 
             if (jsonStr != null) {
                 try {
