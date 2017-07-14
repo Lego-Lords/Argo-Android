@@ -37,7 +37,10 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Time;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -143,7 +146,7 @@ public class MainActivity extends ArJpctActivity {
                     updateModelOnScreen();
                     isNewStep = false;
                 }
-                modelUpdaterHandler.postDelayed(this, 2000);
+                modelUpdaterHandler.postDelayed(this, 0);
             }
             else {
                 finishBuilding();
@@ -533,9 +536,9 @@ public class MainActivity extends ArJpctActivity {
 
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(baseUrl);
-
+            Log.d("dataServer", "Time: " + DateFormat.getDateTimeInstance().format(new Date()));
             Log.e(TAG, "Response from url: " + jsonStr);
-            jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '1'}] }"; //dummy data in case no server
+            //jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
 
             if (jsonStr != null) {
                 try {
