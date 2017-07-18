@@ -67,10 +67,10 @@ public class MainActivity extends ArJpctActivity {
     private TextView brickStepTextView;
     private View wrongBrickView;
     private int currentStep = -1; //to be CHANGED
-    private int maxStep = 0;
-    //private int maxStep = 6; //TEST
-    private int nextStep = -1; //to be CHANGED
-    //private int nextStep = 0; //TEST
+    //private int maxStep = 0;
+    private int maxStep = 6; //TEST
+    //private int nextStep = -1; //to be CHANGED
+    private int nextStep = 0; //TEST
     private boolean hasError = false;
     private String modelName;
     private int currentBuiltModel = -1;
@@ -142,6 +142,11 @@ public class MainActivity extends ArJpctActivity {
             if(nextStep != maxStep) {
                 if(isNewStep) {
                     System.out.println("PUMASOK SA ETITS");
+                    //FINISH ANIMATION
+                    if(nextStep > 0) {
+                        modelList.get(nextStep - 1).clearTranslation();
+                        modelList.get(nextStep - 1).translate(new SimpleVector(0, 0, 0));
+                    }
                     updateErrorTV();
                     updateModelOnScreen();
                     isNewStep = false;
@@ -149,6 +154,11 @@ public class MainActivity extends ArJpctActivity {
                 modelUpdaterHandler.postDelayed(this, 2000);
             }
             else {
+                //FINISH ANIMATION
+                if(nextStep > 0) {
+                    modelList.get(nextStep - 1).clearTranslation();
+                    modelList.get(nextStep - 1).translate(new SimpleVector(0, 0, 0));
+                }
                 finishBuilding();
                 modelUpdaterHandler.removeCallbacks(modelUpdaterRunnable);
             }
@@ -519,6 +529,7 @@ public class MainActivity extends ArJpctActivity {
             {
                 isNewStep = true;
                 previouslyRecievedStep = nextStep;
+
             }
 
             // Showing progress dialog
@@ -544,9 +555,9 @@ public class MainActivity extends ArJpctActivity {
             Log.d("dataServer", "Time: " + DateFormat.getDateTimeInstance().format(new Date()));
             Log.e(TAG, "Response from url: " + jsonStr);
 
-            if(your_IP_address.equals(""))
-            jsonStr = "{ 'data': [{'currentStep': '5', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
-
+//            if(your_IP_address.equals(""))
+//            jsonStr = "{ 'data': [{'currentStep': '8', 'maxStep': '8', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
+            jsonStr = "shit";
             if (jsonStr != null) {
                 try {
                     JSONObject jsonObj = new JSONObject(jsonStr);
@@ -567,7 +578,6 @@ public class MainActivity extends ArJpctActivity {
                         Log.d("fromServer", String.valueOf(nextStep));
                         Log.d("fromServer", String.valueOf(maxStep));
                         Log.d("fromServer ERROR", String.valueOf(hasError));
-
                     }
                 } catch (final JSONException e) {
                     Log.e(TAG, "Json parsing error: " + e.getMessage());
@@ -582,6 +592,10 @@ public class MainActivity extends ArJpctActivity {
                     });
 
                 }
+
+                if(nextStep < maxStep)
+                    nextStep++;
+
             }
 //            else {
 //                Log.e(TAG, "Couldn't get json from server.");

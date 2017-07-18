@@ -34,7 +34,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="org.artoolkit.ar.base.camera.CameraPreferencesActivity" />
+        <activity
+            android:name="org.artoolkit.ar.base.camera.CameraPreferencesActivity"
+            android:screenOrientation="landscape"/>
         <activity
             android:screenOrientation="landscape"
             android:name=".MainActivity"></activity>
