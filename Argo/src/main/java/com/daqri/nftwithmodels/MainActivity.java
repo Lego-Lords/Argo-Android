@@ -70,7 +70,7 @@ public class MainActivity extends ArJpctActivity {
     //private int maxStep = 0;
     private int maxStep = 6; //TEST
     //private int nextStep = -1; //to be CHANGED
-    private int nextStep = 0; //TEST
+    private int nextStep = 1; //TEST
     private boolean hasError = false;
     private String modelName;
     private int currentBuiltModel = -1;
@@ -144,8 +144,10 @@ public class MainActivity extends ArJpctActivity {
                     System.out.println("PUMASOK SA ETITS");
                     //FINISH ANIMATION
                     if(nextStep > 0) {
-                        modelList.get(nextStep - 1).clearTranslation();
-                        modelList.get(nextStep - 1).translate(new SimpleVector(0, 0, 0));
+                        for(int i = 1; i <= nextStep; i++) {
+                            modelList.get(i - 1).clearTranslation();
+                            modelList.get(i - 1).translate(new SimpleVector(0, 0, 0));
+                        }
                     }
                     updateErrorTV();
                     updateModelOnScreen();
@@ -156,8 +158,10 @@ public class MainActivity extends ArJpctActivity {
             else {
                 //FINISH ANIMATION
                 if(nextStep > 0) {
-                    modelList.get(nextStep - 1).clearTranslation();
-                    modelList.get(nextStep - 1).translate(new SimpleVector(0, 0, 0));
+                    for(int i = 1; i <= nextStep; i++) {
+                        modelList.get(i - 1).clearTranslation();
+                        modelList.get(i - 1).translate(new SimpleVector(0, 0, 0));
+                    }
                 }
                 finishBuilding();
                 modelUpdaterHandler.removeCallbacks(modelUpdaterRunnable);
@@ -263,6 +267,7 @@ public class MainActivity extends ArJpctActivity {
     private void removeModelUntilStep(int nextStep) {
         for(int i = 0; i <= nextStep; i++)
         {
+            if(checkIfChildExist(tckobj)) // ADDED OK NA ATA?
             tckobj.removeChild(modelList.get(i));
         }
     }
@@ -529,7 +534,6 @@ public class MainActivity extends ArJpctActivity {
             {
                 isNewStep = true;
                 previouslyRecievedStep = nextStep;
-
             }
 
             // Showing progress dialog
@@ -593,8 +597,8 @@ public class MainActivity extends ArJpctActivity {
 
                 }
 
-                if(nextStep < maxStep)
-                    nextStep++;
+                if(nextStep + 2 < maxStep)
+                    nextStep += 2;
 
             }
 //            else {
