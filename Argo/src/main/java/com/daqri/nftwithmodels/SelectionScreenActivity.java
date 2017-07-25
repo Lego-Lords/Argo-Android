@@ -107,6 +107,7 @@ public class SelectionScreenActivity extends AppCompatActivity {
         protected String doInBackground(String... urls) {
             try {
                 String getResponse = post(lm.getModelName(currentModelSelectedID)); //"http://httpbin.org/post"
+                /*(TESTING) Selected Model Posted*/
                 return getResponse;
             } catch (Exception e) {
                 this.exception = e;

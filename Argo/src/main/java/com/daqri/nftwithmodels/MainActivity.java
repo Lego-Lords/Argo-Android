@@ -67,10 +67,10 @@ public class MainActivity extends ArJpctActivity {
     private TextView brickStepTextView;
     private View wrongBrickView;
     private int currentStep = -1; //to be CHANGED
-    //private int maxStep = 0;
-    private int maxStep = 6; //TEST
-    //private int nextStep = -1; //to be CHANGED
-    private int nextStep = 1; //TEST
+    private int maxStep = 0;
+    //private int maxStep = 6; //TEST
+    private int nextStep = -1; //to be CHANGED
+    //private int nextStep = 1; //TEST
     private boolean hasError = false;
     private String modelName;
     private int currentBuiltModel = -1;
@@ -105,6 +105,8 @@ public class MainActivity extends ArJpctActivity {
 
         // POSSIBLE BUG IN THE FUTURE
         // populateTrackableObjects IS USED AS INITIALIZATION
+
+        /*(TESTING) onCreate of MainActivity here is DONE*/
     }
 
     @Override
@@ -251,6 +253,7 @@ public class MainActivity extends ArJpctActivity {
             completeModelUntilStep(nextStep);
             //tckobj.addChild(modelList.get(nextStep));
             updateBrickTypeTV(modelList.get(nextStep).getName(), nextStep);
+            /*(TESTING) AR MODEL Finish Update*/
         }
     }
 
@@ -272,7 +275,7 @@ public class MainActivity extends ArJpctActivity {
         }
     }
 
-    //COMPLETE MODEL GIVEN STEP (UNTESTED IN REAL SERVER)
+    //COMPLETE MODEL GIVEN STEP
     private void completeModelUntilStep(int nextStep) {
         for(int i = 0; i <= nextStep; i++)
         {
@@ -400,6 +403,8 @@ public class MainActivity extends ArJpctActivity {
         texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.modeltexture_3004_lime)), 64, 64));
         TextureManager.getInstance().addTexture("3004_27", texture);
 
+        /*(TESTING) Load All Texture Finished*/
+
 
         AssetManager assetManager = getResources().getAssets();
         // To load text file
@@ -481,6 +486,7 @@ public class MainActivity extends ArJpctActivity {
 
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
+                    /*(TESTING) Brick Loaded and Data are set*/
                 }
             }
 
@@ -556,12 +562,13 @@ public class MainActivity extends ArJpctActivity {
 
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(baseUrl);
+            /*(TESTING) Requested Step from SERVER*/
             Log.d("dataServer", "Time: " + DateFormat.getDateTimeInstance().format(new Date()));
             Log.e(TAG, "Response from url: " + jsonStr);
 
 //            if(your_IP_address.equals(""))
 //            jsonStr = "{ 'data': [{'currentStep': '8', 'maxStep': '8', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
-            jsonStr = "shit";
+            //jsonStr = "shit";
             if (jsonStr != null) {
                 try {
                     JSONObject jsonObj = new JSONObject(jsonStr);
@@ -597,8 +604,8 @@ public class MainActivity extends ArJpctActivity {
 
                 }
 
-                if(nextStep + 2 < maxStep)
-                    nextStep += 2;
+/*                if(nextStep + 2 < maxStep)
+                    nextStep += 2;*/
 
             }
 //            else {
