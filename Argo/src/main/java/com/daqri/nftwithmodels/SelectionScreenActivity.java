@@ -18,6 +18,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.util.Date;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -108,6 +110,12 @@ public class SelectionScreenActivity extends AppCompatActivity {
             try {
                 String getResponse = post(lm.getModelName(currentModelSelectedID)); //"http://httpbin.org/post"
                 /*(TESTING) Selected Model Posted*/
+                try {
+                    String[] data = {"Model Selected Posted", DateFormat.getDateTimeInstance().format(new Date())};
+                    new WriteCSV(data);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 return getResponse;
             } catch (Exception e) {
                 this.exception = e;

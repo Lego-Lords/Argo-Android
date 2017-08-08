@@ -77,6 +77,7 @@ public class MainActivity extends ArJpctActivity {
     private boolean loadModelDone = false;
     private boolean isNewStep = false; //SHOYLD BE FALSE
     private int previouslyRecievedStep = -1;
+    private String errorValue_string = "0";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -107,6 +108,12 @@ public class MainActivity extends ArJpctActivity {
         // populateTrackableObjects IS USED AS INITIALIZATION
 
         /*(TESTING) onCreate of MainActivity here is DONE*/
+        try {
+            String[] data = {"MainActivity OnCreate Done", DateFormat.getDateTimeInstance().format(new Date())};
+            new WriteCSV(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -155,7 +162,8 @@ public class MainActivity extends ArJpctActivity {
                     updateModelOnScreen();
                     isNewStep = false;
                 }
-                modelUpdaterHandler.postDelayed(this, 2000);
+                updateErrorTV();
+                modelUpdaterHandler.postDelayed(this, 2000); // remove delay?
             }
             else {
                 //FINISH ANIMATION
@@ -254,6 +262,12 @@ public class MainActivity extends ArJpctActivity {
             //tckobj.addChild(modelList.get(nextStep));
             updateBrickTypeTV(modelList.get(nextStep).getName(), nextStep);
             /*(TESTING) AR MODEL Finish Update*/
+            try {
+                String[] data = {"AR MODEL Finish Update", DateFormat.getDateTimeInstance().format(new Date())};
+                new WriteCSV(data);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -365,7 +379,8 @@ public class MainActivity extends ArJpctActivity {
     public void configureWorld(World world) {
         this.world = world;
         Config.farPlane = 2000;
-        world.setAmbientLight(200, 200, 200); //255 all original * too bright for our eyes
+        //world.setAmbientLight(200, 200, 200); //255 all original * too bright for our eyes
+        world.setAmbientLight(255,255,255);
     }
 
     protected void populateTrackableObjects(List<TrackableObject3d> list) {
@@ -404,6 +419,13 @@ public class MainActivity extends ArJpctActivity {
         TextureManager.getInstance().addTexture("3004_27", texture);
 
         /*(TESTING) Load All Texture Finished*/
+        try {
+            String[] data = {"Load All Texture Finished", DateFormat.getDateTimeInstance().format(new Date())};
+            new WriteCSV(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
 
         AssetManager assetManager = getResources().getAssets();
@@ -481,12 +503,18 @@ public class MainActivity extends ArJpctActivity {
                     brickModel.setTexture(modelID + "_" + color);
                     brickModel.setName(modelID + "_" + color);
                     brickModel.setRotationMatrix(rotMatrix);
-                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10)+100, xPos*(scaleFactor/10)-100, zPos*(scaleFactor/10)-0));
+                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10)+200, xPos*(scaleFactor/10)-100, zPos*(scaleFactor/10)-0));
 //                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10), xPos*(scaleFactor/10), zPos*(scaleFactor/10)-0));
 
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
                     /*(TESTING) Brick Loaded and Data are set*/
+                    try {
+                        String[] data = {"Brick Loaded and Data are set", DateFormat.getDateTimeInstance().format(new Date())};
+                        new WriteCSV(data);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -563,11 +591,17 @@ public class MainActivity extends ArJpctActivity {
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(baseUrl);
             /*(TESTING) Requested Step from SERVER*/
+            try {
+                String[] data = {"Request Step from Server", DateFormat.getDateTimeInstance().format(new Date())};
+                new WriteCSV(data);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             Log.d("dataServer", "Time: " + DateFormat.getDateTimeInstance().format(new Date()));
             Log.e(TAG, "Response from url: " + jsonStr);
 
 //            if(your_IP_address.equals(""))
-//            jsonStr = "{ 'data': [{'currentStep': '8', 'maxStep': '8', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
+            jsonStr = "{ 'data': [{'currentStep': '8', 'maxStep': '8', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
             //jsonStr = "shit";
             if (jsonStr != null) {
                 try {
@@ -583,9 +617,14 @@ public class MainActivity extends ArJpctActivity {
                         nextStep = d.getInt("currentStep");
                         maxStep = d.getInt("maxStep");
                         modelName = d.getString("modelName");
-                        if(d.getInt("hasError")==1)
+                        errorValue_string = d.getString("hasError");
+                        Log.d("fromServer wtf", errorValue_string);
+                        if(errorValue_string.equals("1"))
                             hasError = true;
-                        else hasError = false;
+                        else if(errorValue_string.equals("0"))
+                            hasError = false;
+
+
                         Log.d("fromServer", String.valueOf(nextStep));
                         Log.d("fromServer", String.valueOf(maxStep));
                         Log.d("fromServer ERROR", String.valueOf(hasError));
@@ -603,6 +642,7 @@ public class MainActivity extends ArJpctActivity {
                     });
 
                 }
+
 
 /*                if(nextStep + 2 < maxStep)
                     nextStep += 2;*/

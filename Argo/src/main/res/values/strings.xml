@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Argo</string>
-    <string name="wrong_brick_warning">A brick has been placed in the wrong position</string>
+    <string name="wrong_brick_warning">Model cannot be recognized\n Please recheck or rotate the model</string>
 </resources>
