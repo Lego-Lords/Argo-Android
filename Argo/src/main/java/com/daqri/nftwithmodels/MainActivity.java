@@ -232,7 +232,7 @@ public class MainActivity extends ArJpctActivity {
 
         // set the custom dialog components - text, image and button
         TextView text = (TextView) dialog.findViewById(R.id.text);
-        text.setText("Congratulations! you have successfully built " + lm.getModelName(legoModelStructureID));
+        text.setText("Congratulations! You have successfully built " + lm.getModelName(legoModelStructureID));
         text.setTextColor(Color.parseColor("#000000"));
         ImageView image = (ImageView) dialog.findViewById(R.id.image);
         image.setImageResource(lm.getImageResource(legoModelStructureID));
