@@ -8,6 +8,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -17,7 +19,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.threed.jpct.Camera;
 import com.threed.jpct.Config;
+import com.threed.jpct.Light;
 import com.threed.jpct.Loader;
 import com.threed.jpct.Logger;
 import com.threed.jpct.Matrix;
@@ -46,6 +50,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class MainActivity extends ArJpctActivity {
     String your_IP_address = ""; /* Enter your IP address : port */
     String your_web_app = "value"; /* Replace this with your own web app name */
@@ -57,6 +66,7 @@ public class MainActivity extends ArJpctActivity {
     private List<TrackableObject3d> tckobjList;
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
     private ArrayList<Object3D> modelList = new ArrayList<>();
+    private ArrayList<Object3D> listForRotation = new ArrayList<>();
     private boolean firstTap = true;
     private World world;
     private Context mContext;
@@ -78,12 +88,67 @@ public class MainActivity extends ArJpctActivity {
     private boolean isNewStep = false; //SHOYLD BE FALSE
     private int previouslyRecievedStep = -1;
     private String errorValue_string = "0";
+    private PostTaskOverride task;
+    OkHttpClient client = new OkHttpClient();
+    private View view;
+    private Boolean isFirstBrick = true;
+    private Object3D parentObject = Object3D.createDummyObj();
+    private Camera cam;
+    private Light sun;
+
+    public MainActivity() {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getIntent().setAction("Already created");
         setContentView(R.layout.activity_main);
+        View v = findViewById(android.R.id.content);
+        //setContentView(v);
+
+
+        final GestureDetector gd = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener(){
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+
+                PostTaskOverride task = new PostTaskOverride();
+                task.execute();
+                Toast.makeText(MainActivity.this,
+                        "Wait for the next step", Toast.LENGTH_SHORT).show();
+
+                return true;
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+                super.onLongPress(e);
+
+            }
+
+            @Override
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+
+        });
+        v.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                return gd.onTouchEvent(event);
+            }
+        });
+
+
+
 
         System.out.println("ANG ORAS AY SEX");
 
@@ -163,7 +228,7 @@ public class MainActivity extends ArJpctActivity {
                     isNewStep = false;
                 }
                 updateErrorTV();
-                modelUpdaterHandler.postDelayed(this, 2000); // remove delay?
+                modelUpdaterHandler.postDelayed(this, 1000); // remove delay?
             }
             else {
                 //FINISH ANIMATION
@@ -381,6 +446,9 @@ public class MainActivity extends ArJpctActivity {
         Config.farPlane = 2000;
         //world.setAmbientLight(200, 200, 200); //255 all original * too bright for our eyes
         world.setAmbientLight(255,255,255);
+        sun = new Light(world);
+        sun.setIntensity(250, 250, 250);
+        cam = world.getCamera();
     }
 
     protected void populateTrackableObjects(List<TrackableObject3d> list) {
@@ -503,11 +571,15 @@ public class MainActivity extends ArJpctActivity {
                     brickModel.setTexture(modelID + "_" + color);
                     brickModel.setName(modelID + "_" + color);
                     brickModel.setRotationMatrix(rotMatrix);
-                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10)+200, xPos*(scaleFactor/10)-100, zPos*(scaleFactor/10)-0));
+                    brickModel.setOrigin(new SimpleVector(yPos * (scaleFactor / 10) + 200, xPos * (scaleFactor / 10) - 100, zPos * (scaleFactor / 10) - 0));
 //                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10), xPos*(scaleFactor/10), zPos*(scaleFactor/10)-0));
 
+
+                    //dummyObject.addChild(brickModel);
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
+
+
                     /*(TESTING) Brick Loaded and Data are set*/
                     try {
                         String[] data = {"Brick Loaded and Data are set", DateFormat.getDateTimeInstance().format(new Date())};
@@ -530,6 +602,7 @@ public class MainActivity extends ArJpctActivity {
 
         initializeHandler.postDelayed(initializeRunnable, 0);
         System.out.println("KAKATAPOS LANG NG LOAD");
+
     }
 
     private Object3D loadModel(String filename, float scale) throws IOException {
@@ -601,7 +674,7 @@ public class MainActivity extends ArJpctActivity {
             Log.e(TAG, "Response from url: " + jsonStr);
 
 //            if(your_IP_address.equals(""))
-            jsonStr = "{ 'data': [{'currentStep': '8', 'maxStep': '8', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
+            jsonStr = "{ 'data': [{'currentStep': '0', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
             //jsonStr = "shit";
             if (jsonStr != null) {
                 try {
@@ -613,8 +686,8 @@ public class MainActivity extends ArJpctActivity {
                     // looping through All Contacts
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject d = data.getJSONObject(i);
-
-                        nextStep = d.getInt("currentStep");
+                        if(d.getInt("currentStep") >= nextStep)
+                            nextStep = d.getInt("currentStep");
                         maxStep = d.getInt("maxStep");
                         modelName = d.getString("modelName");
                         errorValue_string = d.getString("hasError");
@@ -675,5 +748,35 @@ public class MainActivity extends ArJpctActivity {
 
         }
 
+    }
+
+    public class PostTaskOverride extends AsyncTask<String, Void, String> {
+        private Exception exception;
+
+        protected String doInBackground(String... urls) {
+            try {
+                String getResponse = post(Integer.toString(nextStep)); //"http://httpbin.org/post"
+                return getResponse;
+            } catch (Exception e) {
+                this.exception = e;
+                return null;
+            }
+        }
+
+        protected void onPostExecute(String getResponse) {
+            System.out.println("Override to: " + getResponse);
+        }
+
+        private String post(String currentStep) throws IOException {
+            String your_web_app = "next-step?id="+currentStep+"";  //Replace this with your own web app name
+            System.out.println("hey " + currentStep);
+            String baseUrl = "http://" + your_IP_address + "/" + your_web_app;
+
+            Request request = new Request.Builder()
+                    .url(baseUrl)
+                    .build();
+            Response response = client.newCall(request).execute();
+            return response.body().string();
+        }
     }
 }

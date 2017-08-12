@@ -39,7 +39,7 @@ public class SelectionScreenActivity extends AppCompatActivity {
 
     private LegoModel lm;
     //private String url = "http://www.roundsapp.com/post"; //SERVER POST URL
-    private PostTask task;
+    private PostTaskModelSelection task;
     MediaType JSON;
     OkHttpClient client = new OkHttpClient();
 
@@ -65,7 +65,7 @@ public class SelectionScreenActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //SEND MODEL ID TO SERVER HERE
                 currentModelSelectedID = viewPager.getCurrentItem();
-                PostTask task = new PostTask();
+                PostTaskModelSelection task = new PostTaskModelSelection();
                 task.execute();
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 intent.putExtra("LEGO_MODEL_ID", String.valueOf(viewPager.getCurrentItem()));
@@ -103,39 +103,39 @@ public class SelectionScreenActivity extends AppCompatActivity {
         builder.show();
     }
 
-    public class PostTask extends AsyncTask<String, Void, String> {
-        private Exception exception;
+    public class PostTaskModelSelection extends AsyncTask<String, Void, String> {
+            private Exception exception;
 
-        protected String doInBackground(String... urls) {
-            try {
-                String getResponse = post(lm.getModelName(currentModelSelectedID)); //"http://httpbin.org/post"
-                /*(TESTING) Selected Model Posted*/
+            protected String doInBackground(String... urls) {
                 try {
-                    String[] data = {"Model Selected Posted", DateFormat.getDateTimeInstance().format(new Date())};
-                    new WriteCSV(data);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    String getResponse = post(lm.getModelName(currentModelSelectedID)); //"http://httpbin.org/post"
+                /*(TESTING) Selected Model Posted*/
+                    try {
+                        String[] data = {"Model Selected Posted", DateFormat.getDateTimeInstance().format(new Date())};
+                        new WriteCSV(data);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return getResponse;
+                } catch (Exception e) {
+                    this.exception = e;
+                    return null;
                 }
-                return getResponse;
-            } catch (Exception e) {
-                this.exception = e;
-                return null;
             }
-        }
 
-        protected void onPostExecute(String getResponse) {
-            System.out.println(getResponse);
-        }
+            protected void onPostExecute(String getResponse) {
+                System.out.println(getResponse);
+            }
 
-        private String post(String modelName) throws IOException {
-            String your_web_app = "model-id?id="+modelName+"";  //Replace this with your own web app name
-            String baseUrl = "http://" + your_IP_address + "/" + your_web_app;
+            private String post(String modelName) throws IOException {
+                String your_web_app = "model-id?id="+modelName+"";  //Replace this with your own web app name
+                String baseUrl = "http://" + your_IP_address + "/" + your_web_app;
 
-            Request request = new Request.Builder()
-                    .url(baseUrl)
-                    .build();
-            Response response = client.newCall(request).execute();
-            return response.body().string();
-        }
+                Request request = new Request.Builder()
+                        .url(baseUrl)
+                        .build();
+                Response response = client.newCall(request).execute();
+                return response.body().string();
+            }
     }
 }
