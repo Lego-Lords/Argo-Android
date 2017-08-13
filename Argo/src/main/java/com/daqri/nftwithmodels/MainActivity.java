@@ -2,6 +2,7 @@ package com.daqri.nftwithmodels;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -16,12 +17,11 @@ import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.threed.jpct.Camera;
 import com.threed.jpct.Config;
-import com.threed.jpct.Light;
 import com.threed.jpct.Loader;
 import com.threed.jpct.Logger;
 import com.threed.jpct.Matrix;
@@ -92,21 +92,21 @@ public class MainActivity extends ArJpctActivity {
     OkHttpClient client = new OkHttpClient();
     private View view;
     private Boolean isFirstBrick = true;
-    private Object3D parentObject = Object3D.createDummyObj();
-    private Camera cam;
-    private Light sun;
 
-    public MainActivity() {
-    }
+    private int rotValue = 0;
+
+    private Object3D parentObject = Object3D.createDummyObj();
+    private boolean isRotate = true;
+    private View topLevelLayout;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getIntent().setAction("Already created");
         setContentView(R.layout.activity_main);
+        topLevelLayout = findViewById(R.id.top_layout);
         View v = findViewById(android.R.id.content);
         //setContentView(v);
-
 
         final GestureDetector gd = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener(){
 
@@ -125,6 +125,15 @@ public class MainActivity extends ArJpctActivity {
             public void onLongPress(MotionEvent e) {
                 super.onLongPress(e);
 
+                isRotate = !isRotate;
+                if(isRotate) {
+                    Toast.makeText(MainActivity.this,
+                            "Auto rotation is turned on", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(MainActivity.this,
+                            "Auto rotation is turned off", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
@@ -148,10 +157,6 @@ public class MainActivity extends ArJpctActivity {
         });
 
 
-
-
-        System.out.println("ANG ORAS AY SEX");
-
         brickTypeTextView = (TextView) findViewById(R.id.brick_type);
         brickTypeImageView = (ImageView) findViewById(R.id.brick_pic);
         brickStepTextView = (TextView) findViewById(R.id.step_tv);
@@ -164,6 +169,12 @@ public class MainActivity extends ArJpctActivity {
         this.your_IP_address = getIntent().getStringExtra("IP_ADDRESS");
         System.out.println("IP ADD " + your_IP_address);
         baseUrl = "http://" + your_IP_address + "/" + your_web_app + "/";
+
+        if (isFirstTime()) {
+            topLevelLayout.setVisibility(View.INVISIBLE);
+        }
+
+        
 
 
         //while (loadModelDone == false) {}
@@ -188,11 +199,43 @@ public class MainActivity extends ArJpctActivity {
         nextStepAnimationHandler.removeCallbacks(nextStepAnimationRunnable);
     }
 
+    private boolean isFirstTime()
+    {
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        boolean ranBefore = preferences.getBoolean("RanBefore", false);
+        if (!ranBefore) {
+
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean("RanBefore", true);
+            editor.commit();
+            topLevelLayout.setVisibility(View.VISIBLE);
+            topLevelLayout.setOnTouchListener(new View.OnTouchListener(){
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    topLevelLayout.setVisibility(View.INVISIBLE);
+                    return false;
+                }
+
+            });
+
+
+        }
+        return ranBefore;
+
+    }
+
     //THREADING ON BRICK UPDATE
     Handler initializeHandler = new Handler();
 
     Runnable initializeRunnable = new Runnable() {
         public void run() {
+            // transfer to parent object
+            for(int i=0; i<modelList.size(); i++){
+                Log.d("rotsex",String.valueOf(i));
+                tckobj.removeChild(modelList.get(i));
+                parentObject.addChild(modelList.get(i));
+            }
             removeAllModelsOnScreen();
             modelUpdaterHandler.postDelayed(modelUpdaterRunnable, 0);
             nextStepAnimationHandler.postDelayed(nextStepAnimationRunnable, 0);
@@ -204,7 +247,7 @@ public class MainActivity extends ArJpctActivity {
 
     Runnable modelUpdaterRunnable = new Runnable() {
         public void run() {
-        //DO SOMESHIT HERE
+            //DO SOMESHIT HERE
             new Recheck().execute();
             //nextStep++;
 
@@ -228,7 +271,7 @@ public class MainActivity extends ArJpctActivity {
                     isNewStep = false;
                 }
                 updateErrorTV();
-                modelUpdaterHandler.postDelayed(this, 1000); // remove delay?
+                modelUpdaterHandler.postDelayed(this, 500); // remove delay?
             }
             else {
                 //FINISH ANIMATION
@@ -241,7 +284,7 @@ public class MainActivity extends ArJpctActivity {
                 finishBuilding();
                 modelUpdaterHandler.removeCallbacks(modelUpdaterRunnable);
             }
-    }
+        }
     };
 
     private void updateErrorTV() {
@@ -319,7 +362,7 @@ public class MainActivity extends ArJpctActivity {
         System.out.println("MODEL SIZE " + modelList.size() );
         if (nextStep  < modelList.size()) {
             System.out.println("SEX: " + nextStep);
-            if(checkIfChildExist(tckobj)) {
+            if(checkIfChildExist(parentObject)) {
                 Log.d("checkchild", "pasok");
                 removeModelUntilStep(nextStep-1);
             }
@@ -336,7 +379,7 @@ public class MainActivity extends ArJpctActivity {
         }
     }
 
-    private boolean checkIfChildExist(TrackableObject3d tckobj) {
+    private boolean checkIfChildExist(Object3D tckobj) {
         for(int i = 0; i <= nextStep; i++)
         {
             Log.d("checkchild", String.valueOf(nextStep));
@@ -349,8 +392,8 @@ public class MainActivity extends ArJpctActivity {
     private void removeModelUntilStep(int nextStep) {
         for(int i = 0; i <= nextStep; i++)
         {
-            if(checkIfChildExist(tckobj)) // ADDED OK NA ATA?
-            tckobj.removeChild(modelList.get(i));
+            if(checkIfChildExist(parentObject)) // ADDED OK NA ATA?
+                parentObject.removeChild(modelList.get(i));
         }
     }
 
@@ -358,7 +401,7 @@ public class MainActivity extends ArJpctActivity {
     private void completeModelUntilStep(int nextStep) {
         for(int i = 0; i <= nextStep; i++)
         {
-            tckobj.addChild(modelList.get(i));
+            parentObject.addChild(modelList.get(i));
         }
     }
 
@@ -406,11 +449,11 @@ public class MainActivity extends ArJpctActivity {
                 }
                 break;
             case "3004": brick = "1x2";
-            switch (result[1])
-            {
-                case "27": brickTypeImageView.setImageResource(R.drawable.step_3004_27); break;
-            }
-            break;
+                switch (result[1])
+                {
+                    case "27": brickTypeImageView.setImageResource(R.drawable.step_3004_27); break;
+                }
+                break;
             case "3005": brick = "1x1"; break;
         }
 
@@ -422,7 +465,7 @@ public class MainActivity extends ArJpctActivity {
     private void removeAllModelsOnScreen() {
         System.out.println("RIP " + modelList.size());
         for (int i = 0; i < modelList.size(); i++) {
-            tckobj.removeChild(modelList.get(i));
+            parentObject.removeChild(modelList.get(i));
         }
         System.out.println("REMOVED");
     }
@@ -446,9 +489,6 @@ public class MainActivity extends ArJpctActivity {
         Config.farPlane = 2000;
         //world.setAmbientLight(200, 200, 200); //255 all original * too bright for our eyes
         world.setAmbientLight(255,255,255);
-        sun = new Light(world);
-        sun.setIntensity(250, 250, 250);
-        cam = world.getCamera();
     }
 
     protected void populateTrackableObjects(List<TrackableObject3d> list) {
@@ -571,14 +611,11 @@ public class MainActivity extends ArJpctActivity {
                     brickModel.setTexture(modelID + "_" + color);
                     brickModel.setName(modelID + "_" + color);
                     brickModel.setRotationMatrix(rotMatrix);
-                    brickModel.setOrigin(new SimpleVector(yPos * (scaleFactor / 10) + 200, xPos * (scaleFactor / 10) - 100, zPos * (scaleFactor / 10) - 0));
+                    brickModel.setOrigin(new SimpleVector(yPos * (scaleFactor / 10) + 200, xPos * (scaleFactor / 10) - 100, zPos * (scaleFactor / 10)-0));
 //                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10), xPos*(scaleFactor/10), zPos*(scaleFactor/10)-0));
 
-
-                    //dummyObject.addChild(brickModel);
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
-
 
                     /*(TESTING) Brick Loaded and Data are set*/
                     try {
@@ -598,11 +635,12 @@ public class MainActivity extends ArJpctActivity {
 //        tckobj.setOrigin(new SimpleVector(0,0,0));
 //        tckobj.setOrigin(new SimpleVector(0,0,200));
 //        tckobj.setOrigin(new SimpleVector(0,100,0));
+        parentObject.setOrigin(new SimpleVector(200,-100,0));
+        tckobj.addChild(parentObject);
         this.tckobjList.add(tckobj);
 
         initializeHandler.postDelayed(initializeRunnable, 0);
         System.out.println("KAKATAPOS LANG NG LOAD");
-
     }
 
     private Object3D loadModel(String filename, float scale) throws IOException {
@@ -674,7 +712,7 @@ public class MainActivity extends ArJpctActivity {
             Log.e(TAG, "Response from url: " + jsonStr);
 
 //            if(your_IP_address.equals(""))
-            jsonStr = "{ 'data': [{'currentStep': '0', 'maxStep': '6', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
+            jsonStr = "{ 'data': [{'currentStep': '0', 'maxStep': '12', 'modelName': 'Duck', 'hasError': '0', 'rotValue': '0'}] }"; //dummy data in case no server
             //jsonStr = "shit";
             if (jsonStr != null) {
                 try {
@@ -691,6 +729,16 @@ public class MainActivity extends ArJpctActivity {
                         maxStep = d.getInt("maxStep");
                         modelName = d.getString("modelName");
                         errorValue_string = d.getString("hasError");
+                        int prevRotValue = rotValue;
+                        rotValue = Integer.valueOf(d.getString("rotValue"));
+                        if(isRotate){
+                            parentObject.rotateZ(rotValue-prevRotValue);
+                        }
+                        else{
+                            parentObject.clearRotation();
+                        }
+                        //ROTATE HERE
+
                         Log.d("fromServer wtf", errorValue_string);
                         if(errorValue_string.equals("1"))
                             hasError = true;
@@ -755,7 +803,7 @@ public class MainActivity extends ArJpctActivity {
 
         protected String doInBackground(String... urls) {
             try {
-                String getResponse = post(Integer.toString(nextStep)); //"http://httpbin.org/post"
+                String getResponse = post(Integer.toString(nextStep++)); //"http://httpbin.org/post"
                 return getResponse;
             } catch (Exception e) {
                 this.exception = e;
