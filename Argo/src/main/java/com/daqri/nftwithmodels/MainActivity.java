@@ -8,6 +8,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -46,6 +48,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class MainActivity extends ArJpctActivity {
     String your_IP_address = ""; /* Enter your IP address : port */
     String your_web_app = "value"; /* Replace this with your own web app name */
@@ -57,6 +64,7 @@ public class MainActivity extends ArJpctActivity {
     private List<TrackableObject3d> tckobjList;
     private TrackableObject3d tckobj = new TrackableObject3d("multi;Data/multi/marker.dat");
     private ArrayList<Object3D> modelList = new ArrayList<>();
+    private ArrayList<Object3D> listForRotation = new ArrayList<>();
     private boolean firstTap = true;
     private World world;
     private Context mContext;
@@ -78,12 +86,84 @@ public class MainActivity extends ArJpctActivity {
     private boolean isNewStep = false; //SHOYLD BE FALSE
     private int previouslyRecievedStep = -1;
     private String errorValue_string = "0";
+    private PostTaskOverride task;
+    OkHttpClient client = new OkHttpClient();
+    private View view;
+    private Boolean isFirstBrick = true;
+
+    private int rotValue = 0;
+
+    private Object3D parentObject = Object3D.createDummyObj();
+    private boolean isRotate = true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getIntent().setAction("Already created");
         setContentView(R.layout.activity_main);
+        View v = findViewById(android.R.id.content);
+        //setContentView(v);
+
+        final GestureDetector gd = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener(){
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+
+//                modelList.get(0).addChild(modelList.get(1));
+//                modelList.get(0).rotateZ(90);
+                parentObject.rotateZ(90);
+//                for(int i=0; i<modelList.size(); i++){
+//                    parentObject.removeChild(modelList.get(i));
+//                    tckobj.addChild(modelList.get(i));
+//                }
+
+                //your action here for double tap e.g.
+                //Log.d("OnDoubleTapListener", "onDoubleTap");
+                PostTaskOverride task = new PostTaskOverride();
+                task.execute();
+                Toast.makeText(MainActivity.this,
+                        "Wait for the next step", Toast.LENGTH_SHORT).show();
+
+                return true;
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+                super.onLongPress(e);
+
+                isRotate = !isRotate;
+                if(isRotate) {
+                    Toast.makeText(MainActivity.this,
+                            "Auto rotation is turned on", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(MainActivity.this,
+                            "Auto rotation is turned off", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+
+        });
+        v.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                return gd.onTouchEvent(event);
+            }
+        });
+
+
+
 
         System.out.println("ANG ORAS AY SEX");
 
@@ -128,6 +208,12 @@ public class MainActivity extends ArJpctActivity {
 
     Runnable initializeRunnable = new Runnable() {
         public void run() {
+            // transfer to parent object
+            for(int i=0; i<modelList.size(); i++){
+                Log.d("rotsex",String.valueOf(i));
+                tckobj.removeChild(modelList.get(i));
+                parentObject.addChild(modelList.get(i));
+            }
             removeAllModelsOnScreen();
             modelUpdaterHandler.postDelayed(modelUpdaterRunnable, 0);
             nextStepAnimationHandler.postDelayed(nextStepAnimationRunnable, 0);
@@ -139,7 +225,7 @@ public class MainActivity extends ArJpctActivity {
 
     Runnable modelUpdaterRunnable = new Runnable() {
         public void run() {
-        //DO SOMESHIT HERE
+            //DO SOMESHIT HERE
             new Recheck().execute();
             //nextStep++;
 
@@ -163,7 +249,7 @@ public class MainActivity extends ArJpctActivity {
                     isNewStep = false;
                 }
                 updateErrorTV();
-                modelUpdaterHandler.postDelayed(this, 2000); // remove delay?
+                modelUpdaterHandler.postDelayed(this, 500); // remove delay?
             }
             else {
                 //FINISH ANIMATION
@@ -176,7 +262,7 @@ public class MainActivity extends ArJpctActivity {
                 finishBuilding();
                 modelUpdaterHandler.removeCallbacks(modelUpdaterRunnable);
             }
-    }
+        }
     };
 
     private void updateErrorTV() {
@@ -254,7 +340,7 @@ public class MainActivity extends ArJpctActivity {
         System.out.println("MODEL SIZE " + modelList.size() );
         if (nextStep  < modelList.size()) {
             System.out.println("SEX: " + nextStep);
-            if(checkIfChildExist(tckobj)) {
+            if(checkIfChildExist(parentObject)) {
                 Log.d("checkchild", "pasok");
                 removeModelUntilStep(nextStep-1);
             }
@@ -271,7 +357,7 @@ public class MainActivity extends ArJpctActivity {
         }
     }
 
-    private boolean checkIfChildExist(TrackableObject3d tckobj) {
+    private boolean checkIfChildExist(Object3D tckobj) {
         for(int i = 0; i <= nextStep; i++)
         {
             Log.d("checkchild", String.valueOf(nextStep));
@@ -284,8 +370,8 @@ public class MainActivity extends ArJpctActivity {
     private void removeModelUntilStep(int nextStep) {
         for(int i = 0; i <= nextStep; i++)
         {
-            if(checkIfChildExist(tckobj)) // ADDED OK NA ATA?
-            tckobj.removeChild(modelList.get(i));
+            if(checkIfChildExist(parentObject)) // ADDED OK NA ATA?
+                parentObject.removeChild(modelList.get(i));
         }
     }
 
@@ -293,7 +379,7 @@ public class MainActivity extends ArJpctActivity {
     private void completeModelUntilStep(int nextStep) {
         for(int i = 0; i <= nextStep; i++)
         {
-            tckobj.addChild(modelList.get(i));
+            parentObject.addChild(modelList.get(i));
         }
     }
 
@@ -341,11 +427,11 @@ public class MainActivity extends ArJpctActivity {
                 }
                 break;
             case "3004": brick = "1x2";
-            switch (result[1])
-            {
-                case "27": brickTypeImageView.setImageResource(R.drawable.step_3004_27); break;
-            }
-            break;
+                switch (result[1])
+                {
+                    case "27": brickTypeImageView.setImageResource(R.drawable.step_3004_27); break;
+                }
+                break;
             case "3005": brick = "1x1"; break;
         }
 
@@ -357,7 +443,7 @@ public class MainActivity extends ArJpctActivity {
     private void removeAllModelsOnScreen() {
         System.out.println("RIP " + modelList.size());
         for (int i = 0; i < modelList.size(); i++) {
-            tckobj.removeChild(modelList.get(i));
+            parentObject.removeChild(modelList.get(i));
         }
         System.out.println("REMOVED");
     }
@@ -503,11 +589,12 @@ public class MainActivity extends ArJpctActivity {
                     brickModel.setTexture(modelID + "_" + color);
                     brickModel.setName(modelID + "_" + color);
                     brickModel.setRotationMatrix(rotMatrix);
-                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10)+200, xPos*(scaleFactor/10)-100, zPos*(scaleFactor/10)-0));
+                    brickModel.setOrigin(new SimpleVector(yPos * (scaleFactor / 10) + 200, xPos * (scaleFactor / 10) - 100, zPos * (scaleFactor / 10)-0));
 //                    brickModel.setOrigin(new SimpleVector(yPos*(scaleFactor/10), xPos*(scaleFactor/10), zPos*(scaleFactor/10)-0));
 
                     tckobj.addChild(brickModel);
                     modelList.add(brickModel);
+
                     /*(TESTING) Brick Loaded and Data are set*/
                     try {
                         String[] data = {"Brick Loaded and Data are set", DateFormat.getDateTimeInstance().format(new Date())};
@@ -526,6 +613,8 @@ public class MainActivity extends ArJpctActivity {
 //        tckobj.setOrigin(new SimpleVector(0,0,0));
 //        tckobj.setOrigin(new SimpleVector(0,0,200));
 //        tckobj.setOrigin(new SimpleVector(0,100,0));
+        parentObject.setOrigin(new SimpleVector(200,-100,0));
+        tckobj.addChild(parentObject);
         this.tckobjList.add(tckobj);
 
         initializeHandler.postDelayed(initializeRunnable, 0);
@@ -601,7 +690,7 @@ public class MainActivity extends ArJpctActivity {
             Log.e(TAG, "Response from url: " + jsonStr);
 
 //            if(your_IP_address.equals(""))
-            jsonStr = "{ 'data': [{'currentStep': '8', 'maxStep': '8', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
+//            jsonStr = "{ 'data': [{'currentStep': '0', 'maxStep': '8', 'modelName': 'Duck', 'hasError': '0'}] }"; //dummy data in case no server
             //jsonStr = "shit";
             if (jsonStr != null) {
                 try {
@@ -613,11 +702,21 @@ public class MainActivity extends ArJpctActivity {
                     // looping through All Contacts
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject d = data.getJSONObject(i);
-
-                        nextStep = d.getInt("currentStep");
+                        if(d.getInt("currentStep") >= nextStep)
+                            nextStep = d.getInt("currentStep");
                         maxStep = d.getInt("maxStep");
                         modelName = d.getString("modelName");
                         errorValue_string = d.getString("hasError");
+                        int prevRotValue = rotValue;
+                        rotValue = Integer.valueOf(d.getString("rotValue"));
+                        if(isRotate){
+                            parentObject.rotateZ(rotValue-prevRotValue);
+                        }
+                        else{
+                            parentObject.clearRotation();
+                        }
+                        //ROTATE HERE
+
                         Log.d("fromServer wtf", errorValue_string);
                         if(errorValue_string.equals("1"))
                             hasError = true;
@@ -675,5 +774,35 @@ public class MainActivity extends ArJpctActivity {
 
         }
 
+    }
+
+    public class PostTaskOverride extends AsyncTask<String, Void, String> {
+        private Exception exception;
+
+        protected String doInBackground(String... urls) {
+            try {
+                String getResponse = post(Integer.toString(nextStep)); //"http://httpbin.org/post"
+                return getResponse;
+            } catch (Exception e) {
+                this.exception = e;
+                return null;
+            }
+        }
+
+        protected void onPostExecute(String getResponse) {
+            System.out.println("Override to: " + getResponse);
+        }
+
+        private String post(String currentStep) throws IOException {
+            String your_web_app = "next-step?id="+currentStep+"";  //Replace this with your own web app name
+            System.out.println("hey " + currentStep);
+            String baseUrl = "http://" + your_IP_address + "/" + your_web_app;
+
+            Request request = new Request.Builder()
+                    .url(baseUrl)
+                    .build();
+            Response response = client.newCall(request).execute();
+            return response.body().string();
+        }
     }
 }
