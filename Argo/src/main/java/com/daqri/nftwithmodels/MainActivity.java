@@ -88,7 +88,6 @@ public class MainActivity extends ArJpctActivity {
     private boolean isNewStep = false; //SHOYLD BE FALSE
     private int previouslyRecievedStep = -1;
     private String errorValue_string = "0";
-    private PostTaskOverride task;
     OkHttpClient client = new OkHttpClient();
     private View view;
     private Boolean isFirstBrick = true;
@@ -98,6 +97,13 @@ public class MainActivity extends ArJpctActivity {
     private Object3D parentObject = Object3D.createDummyObj();
     private boolean isRotate = true;
     private View topLevelLayout;
+    private View rightLayout;
+    private View leftLayout;
+
+    private int initialCurrentStep;
+    private int previousStep;
+
+    private boolean isFirstCurrent = true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -105,6 +111,10 @@ public class MainActivity extends ArJpctActivity {
         getIntent().setAction("Already created");
         setContentView(R.layout.activity_main);
         topLevelLayout = findViewById(R.id.top_layout);
+
+        leftLayout = findViewById(R.id.left_layout);
+        rightLayout = findViewById(R.id.right_layout);
+
         View v = findViewById(android.R.id.content);
         //setContentView(v);
 
@@ -113,7 +123,7 @@ public class MainActivity extends ArJpctActivity {
             @Override
             public boolean onDoubleTap(MotionEvent e) {
 
-                PostTaskOverride task = new PostTaskOverride();
+                PostTaskOverrideNext task = new PostTaskOverrideNext();
                 task.execute();
                 Toast.makeText(MainActivity.this,
                         "Wait for the next step", Toast.LENGTH_SHORT).show();
@@ -148,11 +158,60 @@ public class MainActivity extends ArJpctActivity {
 
 
         });
-        v.setOnTouchListener(new View.OnTouchListener() {
+        rightLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
                 return gd.onTouchEvent(event);
+            }
+        });
+
+        final GestureDetector gd2 = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener(){
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+
+                PostTaskOverridePrevious task = new PostTaskOverridePrevious();
+                if(nextStep > 0)
+                task.execute();
+                Toast.makeText(MainActivity.this,
+                        "Going back to previous step", Toast.LENGTH_SHORT).show();
+
+                return true;
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+                super.onLongPress(e);
+
+                isRotate = !isRotate;
+                if(isRotate) {
+                    Toast.makeText(MainActivity.this,
+                            "Auto rotation is turned on", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(MainActivity.this,
+                            "Auto rotation is turned off", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+
+        });
+        leftLayout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                return gd2.onTouchEvent(event);
             }
         });
 
@@ -174,7 +233,7 @@ public class MainActivity extends ArJpctActivity {
             topLevelLayout.setVisibility(View.INVISIBLE);
         }
 
-        
+
 
 
         //while (loadModelDone == false) {}
@@ -361,12 +420,31 @@ public class MainActivity extends ArJpctActivity {
     private void updateModelOnScreen() {
         System.out.println("MODEL SIZE " + modelList.size() );
         if (nextStep  < modelList.size()) {
-            System.out.println("SEX: " + nextStep);
-            if(checkIfChildExist(parentObject)) {
-                Log.d("checkchild", "pasok");
-                removeModelUntilStep(nextStep-1);
+            if(previousStep > nextStep)
+            {
+                System.out.println("PREVIOUS: " + previousStep);
+                System.out.println("NEXT_POTA: " + nextStep);
+                if(checkIfChildExist(parentObject)) {
+                    Log.d("checkchild", "pasok");
+                    removeModelUntilStep(previousStep); //may -1 dati
+                    parentObject.removeChild(modelList.get(previousStep)); // Remove last
+                }
+
+                completeModelUntilStep(nextStep);
             }
-            completeModelUntilStep(nextStep);
+            else
+            {
+                System.out.println("SEX: " + nextStep);
+                if(checkIfChildExist(parentObject)) {
+                    Log.d("checkchild", "pasok");
+                    removeModelUntilStep(nextStep - 1); //may -1 dati
+                }
+
+                completeModelUntilStep(nextStep);
+            }
+
+
+//            completeModelUntilStep(nextStep);
             //tckobj.addChild(modelList.get(nextStep));
             updateBrickTypeTV(modelList.get(nextStep).getName(), nextStep);
             /*(TESTING) AR MODEL Finish Update*/
@@ -677,6 +755,7 @@ public class MainActivity extends ArJpctActivity {
             // IF NEXT STEP HAS CHANGED
             if(nextStep != previouslyRecievedStep)
             {
+                previousStep = previouslyRecievedStep;
                 isNewStep = true;
                 previouslyRecievedStep = nextStep;
             }
@@ -712,7 +791,7 @@ public class MainActivity extends ArJpctActivity {
             Log.e(TAG, "Response from url: " + jsonStr);
 
 //            if(your_IP_address.equals(""))
-            jsonStr = "{ 'data': [{'currentStep': '0', 'maxStep': '12', 'modelName': 'Duck', 'hasError': '0', 'rotValue': '0'}] }"; //dummy data in case no server
+//            jsonStr = "{ 'data': [{'currentStep': '0', 'maxStep': '8', 'modelName': 'Duck', 'hasError': '0', 'rotValue': '0'}] }"; //dummy data in case no server
             //jsonStr = "shit";
             if (jsonStr != null) {
                 try {
@@ -724,7 +803,14 @@ public class MainActivity extends ArJpctActivity {
                     // looping through All Contacts
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject d = data.getJSONObject(i);
-                        if(d.getInt("currentStep") >= nextStep)
+
+/*                        if (isFirstCurrent)
+                        {
+                            initialCurrentStep = d.getInt("currentStep");
+                            isFirstCurrent = false;
+                        }*/
+
+                        //if(d.getInt("currentStep") >= nextStep) //TO BE REMOVED
                             nextStep = d.getInt("currentStep");
                         maxStep = d.getInt("maxStep");
                         modelName = d.getString("modelName");
@@ -798,12 +884,12 @@ public class MainActivity extends ArJpctActivity {
 
     }
 
-    public class PostTaskOverride extends AsyncTask<String, Void, String> {
+    public class PostTaskOverrideNext extends AsyncTask<String, Void, String> {
         private Exception exception;
 
         protected String doInBackground(String... urls) {
             try {
-                String getResponse = post(Integer.toString(nextStep++)); //"http://httpbin.org/post"
+                String getResponse = post(Integer.toString(nextStep)); //"http://httpbin.org/post"
                 return getResponse;
             } catch (Exception e) {
                 this.exception = e;
@@ -817,6 +903,36 @@ public class MainActivity extends ArJpctActivity {
 
         private String post(String currentStep) throws IOException {
             String your_web_app = "next-step?id="+currentStep+"";  //Replace this with your own web app name
+            System.out.println("hey " + currentStep);
+            String baseUrl = "http://" + your_IP_address + "/" + your_web_app;
+
+            Request request = new Request.Builder()
+                    .url(baseUrl)
+                    .build();
+            Response response = client.newCall(request).execute();
+            return response.body().string();
+        }
+    }
+
+    public class PostTaskOverridePrevious extends AsyncTask<String, Void, String> {
+        private Exception exception;
+
+        protected String doInBackground(String... urls) {
+            try {
+                String getResponse = post(Integer.toString(nextStep)); //"http://httpbin.org/post"
+                return getResponse;
+            } catch (Exception e) {
+                this.exception = e;
+                return null;
+            }
+        }
+
+        protected void onPostExecute(String getResponse) {
+            System.out.println("Override to: " + getResponse);
+        }
+
+        private String post(String currentStep) throws IOException {
+            String your_web_app = "prev-step?id="+currentStep+"";  //Replace this with your own web app name
             System.out.println("hey " + currentStep);
             String baseUrl = "http://" + your_IP_address + "/" + your_web_app;
 

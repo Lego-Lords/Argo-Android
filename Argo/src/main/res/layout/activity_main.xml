@@ -17,6 +17,7 @@
         android:orientation="horizontal">
 
         <LinearLayout
+            android:id="@+id/left_layout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -38,6 +39,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/right_layout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -205,6 +207,53 @@
             android:id="@+id/tutorial_text_step"
             android:layout_alignTop="@+id/tutorial_text_brick"
             android:layout_alignEnd="@+id/step_indicator" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Previous Step"
+            android:textColor="#ffffff"
+            android:textSize="25sp"
+            android:id="@+id/textView2"
+            android:layout_alignTop="@+id/textView"
+            android:layout_alignStart="@+id/tutorial_text_step" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Next Step"
+            android:layout_marginBottom="64dp"
+            android:id="@+id/textView"
+            android:textColor="#ffffff"
+            android:textSize="25sp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignStart="@+id/imageView2" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/hand_click"
+            android:id="@+id/imageView2"
+            android:layout_above="@+id/textView"
+            android:layout_alignStart="@+id/tutorial_text_brick" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/hand_click"
+            android:id="@+id/imageView"
+            android:layout_alignTop="@+id/imageView2"
+            android:layout_alignEnd="@+id/step_indicator" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Double-Tap"
+            android:id="@+id/textView3"
+            android:textColor="#ffffff"
+            android:textSize="25sp"
+            android:layout_alignTop="@+id/imageView"
+            android:layout_centerHorizontal="true" />
 
     </RelativeLayout>
 
